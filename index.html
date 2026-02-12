@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test – Order Widget</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 2rem;
+      background: #f8f9fa;
+    }
+    h1 { color: #333; }
+  </style>
+</head>
+<body>
+
+  <h1>Welcome to my test shop</h1>
+  <p>Scroll down or just wait — click the floating button if it appears.</p>
+
+  <button>Custom Triger</button>
+
+  <script src="./widget.js"
+    async
+    data-title="Place Order"
+    data-submit-url="http://localhost:8000/api/order"
+    data-button-text="🛒"
+    data-button-color="#d97706"
+    data-currency="₱"
+    data-view="list"
+    data-products='[
+    {"id":"halo","name":"Premium Halo-halo","price":95, "image":null, "description":"Ube ice cream, leche flan, red beans, sago, macapuno, pinipig – classic Pinoy goodness"},
+    {"id":"flan","name":"Leche Flan","price":55, "image":"https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400", "description":"Silky caramel custard made with fresh eggs and condensed milk"},
+    {"id":"buko","name":"Buko Juice","price":45, "image":null,"description":"Fresh young coconut water – naturally sweet and very refreshing"},
+    {"id":"halo1","name":"Premium Halo-halo","price":95, "image":null, "description":"Ube ice cream, leche flan, red beans, sago, macapuno, pinipig – classic Pinoy goodness"},
+    {"id":"halo2","name":"Premium Halo-halo","price":95, "image":null, "description":"Ube ice cream, leche flan, red beans, sago, macapuno, pinipig – classic Pinoy goodness"},
+    {"id":"halo2","name":"Premium Halo-halo","price":95, "image":null, "description":"Ube ice cream, leche flan, red beans, sago, macapuno, pinipig – classic Pinoy goodness"},
+    {"id":"halo3","name":"Premium Halo-halo","price":95, "image":null, "description":"Ube ice cream, leche flan, red beans, sago, macapuno, pinipig – classic Pinoy goodness"},
+    {"id":"halo4","name":"Premium Halo-halo","price":95, "image":null, "description":"Ube ice cream, leche flan, red beans, sago, macapuno, pinipig – classic Pinoy goodness"},
+    {"id":"halo5","name":"Premium Halo-halo","price":95, "image":null, "description":"Ube ice cream, leche flan, red beans, sago, macapuno, pinipig – classic Pinoy goodness"}
+    ]'
+  ></script>
+
+
+</body>
+</html>
