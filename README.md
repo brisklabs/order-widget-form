@@ -1,6 +1,3 @@
-Here is a complete, well-structured `README.md` file for your **BriskLabs Order Widget** project:
-
-```markdown
 # BriskLabs Order Widget
 
 A lightweight, customizable, embeddable **ordering form widget** for websites.  
@@ -150,5 +147,3 @@ Feel free to use, modify, and distribute.
 
 **Built with ❤️ by [BriskLabs](https://www.brisklabs.dev)**  
 Questions or improvements? → [@roger_molas on X](https://x.com/roger_molas)
-
-```
