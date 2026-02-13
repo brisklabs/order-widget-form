@@ -17,7 +17,6 @@
     submitUrl: script.dataset.submitUrl || 'https://order-widget-dyno-api.brisklabs-dev.deno.net/',
     currency: script.dataset.currency || '₱',
     position: script.dataset.position || 'bottom-right',
-    buttonText: script.dataset.buttonText || '🛒',
     buttonColor: script.dataset.buttonColor || '#2563eb',
     defaultView: script.dataset.view === 'card' ? 'grid' : 'list',
     orderNote: script.dataset.orderNote || null,  
@@ -81,12 +80,21 @@
     .orw-fab:hover { transform: scale(1.08); }
 
     .orw-cart-badge {
-      position: absolute; top: -6px; right: -6px;
-      background: #ef4444; color: white;
-      font-size: 11px; font-weight: bold;
-      min-width: 18px; height: 18px;
-      border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      padding: 0 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      position: absolute; 
+      top: -6px; 
+      right: -6px;
+      background: #ef4444; 
+      color: white;
+      font-size: 11px; 
+      font-weight: bold;
+      width: 20px; 
+      height: 20px;
+      border-radius: 50%; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center;
+      padding: 4px; 
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
       transform: scale(0.95);
     }
 
@@ -231,7 +239,13 @@
   if (!config.customTrigger) {
     fabHTML = `
       <div class="orw-fab-container">
-        <div class="orw-fab" id="orw-fab">${config.buttonText}</div>
+        <div class="orw-fab" id="orw-fab">
+        <svg width="25" height="25" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8 21C9.10457 21 10 20.1046 10 19C10 17.8954 9.10457 17 8 17C6.89543 17 6 17.8954 6 19C6 20.1046 6.89543 21 8 21Z" stroke="currentColor" stroke-width="2"/>
+          <path d="M19 21C20.1046 21 21 20.1046 21 19C21 17.8954 20.1046 17 19 17C17.8954 17 17 17.8954 17 19C17 20.1046 17.8954 21 19 21Z" stroke="currentColor" stroke-width="2"/>
+          <path d="M2 3H5.5L7.5 13.5C7.5 13.5 7.5 15 9 15H18.5C19.5 15 20 14.5 20 13.5L22 5H6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        </div>
         <div class="orw-cart-badge" id="orw-cart-badge" style="display:none;">0</div>
       </div>
     `;
@@ -597,7 +611,7 @@
     sendBtn.textContent = 'Sending...';
 
     const payload = {
-      host: "brisklabs.dev", // or use window.location.hostname if dynamic
+      host: "localhost", //window.location.hostname,
       customer: {
         name: nameInput.value.trim(),
         address: addressInput.value.trim(),
@@ -620,14 +634,26 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
+      let result;
+      try {
+        result = await res.json();  // ← this reads your custom { success, status, message, data, error }
+      } catch (parseErr) {
+        console.error("JSON parse failed:", parseErr);
+        throw new Error("Server returned invalid response");
+      }
+      // Check the custom success field (not just res.ok)
+      if (!result.success) {
+        throw new Error(result.message || result.error || "Order failed on server");
+      }
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      // Success - use message from API if present, fallback to your text
+      const successMsg = result.message || 
+        'Order placed successfully!<br>You will be notified through your provided contact details once the seller confirms your order.<br>Thank you!';
 
-      status.innerHTML = '✅ Order placed successfully!<br>You will be notified through your provided contact details once the seller confirms your order.<br>Thank you!';
+      status.innerHTML = successMsg;
       status.className = 'orw-status orw-success';
       status.style.display = 'block';
 
-      // Clear cart and close after delay
       setTimeout(() => {
         cart = [];
         updateCartDisplay();
@@ -637,8 +663,15 @@
       }, 5000);
 
     } catch (err) {
-      console.error(err);
-      status.innerHTML = '❌ Failed to place order<br>Please try again or contact us directly.';
+      console.error("Submission error:", err);
+
+      // Try to show API error message if available
+      let errorText = err.message || 'Failed to place order';
+      if (err.message.includes("API Response")) {
+        errorText = err.message;
+      }
+
+      status.innerHTML = `❌ ${errorText}<br>Please try again or contact us directly.`;
       status.className = 'orw-status orw-error';
       status.style.display = 'block';
     } finally {
