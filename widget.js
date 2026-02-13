@@ -269,6 +269,8 @@
           <div id="orw-note"></div>
 
           <div id="orw-cart-items"></div>
+
+          <div id="orw-status" class="orw-status" style="display:none;"></div>
           
           <div class="orw-total" id="orw-cart-total">Total: ${config.currency}0.00</div>
           <button class="orw-send-btn" id="orw-send-order">Place Order</button>
@@ -279,8 +281,7 @@
             <span style="font-size:14px;">⚡</span> built by: 
             <a href="https://www.brisklabs.dev" target="_blank" rel="noopener noreferrer">brisklabs.dev</a>
         </p>
-
-      <div id="orw-status" class="orw-status" style="display:none;"></div>
+        
     </div>
   `;
 
@@ -517,7 +518,6 @@
       total: cart.reduce((sum, i) => sum + i.price * i.quantity, 0),
       timestamp: new Date().toISOString()
     };
-
 
     try {
       const res = await fetch(config.submitUrl, {
