@@ -1,6 +1,3 @@
-Here is your **updated README.md** file, fully aligned with the latest state of your widget code:
-
-```markdown
 # BriskLabs Order Widget
 
 A lightweight, customizable, embeddable **ordering form widget** for websites — perfect for small businesses, food stalls, cafes, services, or any setup that needs quick order collection (e.g. forwarded to Telegram or your backend).
@@ -151,4 +148,3 @@ MIT License
 Built with ❤️ by [BriskLabs](https://www.brisklabs.dev)  
 Follow me on X: [@roger_molas](https://x.com/roger_molas)
 
-```
