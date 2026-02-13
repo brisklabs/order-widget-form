@@ -1,34 +1,38 @@
+Here is your **updated README.md** file, fully aligned with the latest state of your widget code:
+
+```markdown
 # BriskLabs Order Widget
 
-A lightweight, customizable, embeddable **ordering form widget** for websites.  
-Ideal for small businesses, food vendors, cafes, services, or any setup that needs quick order collection (e.g. forwarded to Telegram or your backend).
+A lightweight, customizable, embeddable **ordering form widget** for websites — perfect for small businesses, food stalls, cafes, services, or any setup that needs quick order collection (e.g. forwarded to Telegram or your backend).
 
-Features include:
-
-- Floating action button (FAB) or **custom trigger** (your own button/link)
-- Product display in **list** or **card** view
+- Floating action button (FAB) with **default SVG cart icon** (no text)
+- Custom trigger support (use your own button/link — hides FAB)
+- Product list or card view (configurable)
 - Cart with quantity controls (+/−) and remove
-- Customer name, contact, notes form
-- One-click order submission (POST JSON to your endpoint)
-- Mobile-first responsive design (centered panel on phones)
-- Style isolation via Shadow DOM + prefixed classes (`orw-`)
-- No external dependencies — pure vanilla JavaScript
+- Real-time form validation (red border + shake + inline errors)
+- Customer name, address, contact, notes form
+- Currency formatting with commas & cents (₱1,234.50)
+- Mobile-first: centered panel on phones
+- Style isolation via Shadow DOM + `orw-` prefixed classes
+- Optional order note banner
+- Footer credit to brisklabs.dev
 
 <br>
 
 ## Quick Embed Examples
 
-### 1. Default floating button
+### 1. Default FAB (with SVG cart icon)
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/yourusername/brisklabs-order-widget@latest/widget.js"
+<script src="https://cdn.jsdelivr.net/gh/brisklabs-dev/order-widget@latest/widget.js"
   async
   data-title="Place Your Order"
-  data-submit-url="https://your-api.com/api/order"
-  data-button-text="🛒 Order Now"
+  data-submit-url="https://order-widget-dyno-api.brisklabs-dev.deno.net/"
   data-button-color="#d97706"
   data-currency="₱"
   data-view="list"
+  data-host="brisklabs.dev"
+  data-order-note="Orders are processed within 24 hours. Delivery available in Iloilo City only."
   data-products='[
     {"id":"halo","name":"Premium Halo-halo","price":95,"image":null,"description":"Ube ice cream, leche flan, red beans, sago, macapuno, pinipig"},
     {"id":"flan","name":"Leche Flan","price":55,"image":"https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400","description":"Silky caramel custard made with fresh eggs and condensed milk"},
@@ -37,17 +41,17 @@ Features include:
 ></script>
 ```
 
-### 2. Use your own custom trigger button (hides default FAB)
+### 2. Custom trigger (hides default FAB)
 
 ```html
-<button class="my-order-btn">Order Food</button>
+<button class="custom-order-btn">Order Now</button>
 
-<script src="./widget.js"
-  async
-  data-custom-trigger=".my-order-btn"
+<script src="..."
+  data-custom-trigger=".custom-order-btn"
   data-title="Place Your Order"
-  data-submit-url="https://your-api.com/api/order"
+  data-submit-url="https://order-widget-dyno-api.brisklabs-dev.deno.net/"
   data-currency="₱"
+  data-host="brisklabs.dev"
   data-products='[...]'
 ></script>
 ```
@@ -56,29 +60,53 @@ Features include:
 
 ## All Configuration Attributes
 
-| Attribute               | Description                                          | Default              | Example / Notes                              |
-|-------------------------|------------------------------------------------------|----------------------|----------------------------------------------|
-| `data-title`            | Header title of the widget                           | "Quick Order"        | "Place Your Order"                           |
-| `data-submit-url`       | POST endpoint for order JSON                         | —                    | Required                                     |
-| `data-currency`         | Currency symbol                                      | "₱"                  | "$", "€", "฿"                                |
-| `data-position`         | FAB & panel position                                 | "bottom-right"       | "bottom-left"                                |
-| `data-button-text`      | Text or emoji inside FAB                             | "🛒"                 | "Order Now", "🛍️ Book"                      |
-| `data-button-color`     | FAB background color (hex)                           | "#2563eb"            | "#d97706" (amber)                            |
-| `data-view`             | Default product view mode                            | "list"               | "list" or "card"                             |
-| `data-custom-trigger`   | CSS selector(s) for custom open button(s)            | —                    | "#order-btn", ".trigger", "[data-open-order]"|
-| `data-products`         | JSON array of products                               | —                    | See format below                             |
+| Attribute              | Description                                      | Default              | Example / Notes                              |
+|------------------------|--------------------------------------------------|----------------------|----------------------------------------------|
+| `data-title`           | Widget header                                    | "Quick Order"        | "Place Your Order"                           |
+| `data-submit-url`      | POST endpoint for order JSON                     | —                    | Required – your Deno backend                 |
+| `data-currency`        | Currency symbol                                  | "₱"                  | "$", "€", "฿"                                |
+| `data-position`        | FAB & panel position                             | "bottom-right"       | "bottom-left"                                |
+| `data-button-color`    | FAB background color                             | "#2563eb"            | "#d97706" (amber)                            |
+| `data-view`            | Default product view                             | "list"               | "list" or "card"                             |
+| `data-custom-trigger`  | CSS selector for custom open button(s)           | — (uses default FAB) | ".order-btn", "#my-btn"                      |
+| `data-host`            | Company/host identifier (sent to backend)        | "brisklabs.dev"      | "company2" (used for bot/channel selection)  |
+| `data-order-note`      | Optional note banner text                        | —                    | "Delivery in Iloilo only"                    |
+| `data-products`        | JSON array of products                           | —                    | See format below                             |
 
 ### Product object format
 
 ```json
+[
+  {
+    "id": "halo",
+    "name": "Premium Halo-halo",
+    "price": 95,
+    "image": "https://...jpg",      // optional
+    "description": "Ube ice cream..."  // optional
+  }
+]
+```
+
+<br>
+
+## Backend Integration (Deno Deploy Example)
+
+Your widget sends this JSON payload:
+
+```json
 {
-  "id":        "halo",                     // required, unique string
-  "name":      "Premium Halo-halo",        // required
-  "price":     95,                         // required, number
-  "image":     "https://...jpg",           // optional
-  "description": "Ube ice cream, leche flan..."  // optional
+  "host": "brisklabs.dev",
+  "customer": { "name": "...", "address": "...", "contact": "...", "notes": "..." },
+  "items": [ { "id": "...", "name": "...", "price": 95, "quantity": 2 } ],
+  "total": 235,
+  "timestamp": "2025-02-14T04:47:00Z"
 }
 ```
+
+The backend selects bot token & channel based on `host`, formats a clean HTML message, and posts to Telegram.
+
+Live endpoint example:  
+`https://order-widget-dyno-api.brisklabs-dev.deno.net/`
 
 <br>
 
@@ -87,7 +115,7 @@ Features include:
 ### Local testing
 
 ```bash
-# Serve the folder (VS Code Live Server, or)
+# Serve your HTML test page
 npx serve .
 # or
 python -m http.server 8000
@@ -95,55 +123,32 @@ python -m http.server 8000
 
 Open `index.html` in browser.
 
-### Build / minify (optional)
+### Run backend locally (Deno)
 
 ```bash
-# Using terser (install globally: npm i -g terser)
-terser widget.js -o widget.min.js --compress --mangle
+deno run --allow-net --allow-env main.ts
 ```
 
-Then use `widget.min.js` in production.
+Test endpoint:
+```bash
+curl -X POST http://localhost:8000 -H "Content-Type: application/json" -d '{...}'
+```
 
 <br>
 
-## Security & Best Practices
+## Security Notes
 
-- **Never** put Telegram bot tokens or API keys in the widget (keep them server-side)
-- Validate and sanitize all incoming orders on your backend
-- Consider adding rate limiting / CAPTCHA for public sites
-- Use HTTPS for your `submit-url`
-
-<br>
-
-## Backend Example (Node.js / Python / PHP)
-
-Your backend should accept a POST JSON payload like:
-
-```json
-{
-  "customer": {
-    "name": "Juan Dela Cruz",
-    "contact": "juan@example.com",
-    "notes": "Less ice please"
-  },
-  "items": [
-    { "id": "halo", "name": "Premium Halo-halo", "price": 95, "quantity": 2 }
-  ],
-  "total": 190,
-  "timestamp": "2025-02-13T12:34:56.789Z"
-}
-```
-
-Then forward to Telegram, email, Google Sheet, database, etc.
+- Never expose Telegram bot tokens client-side in production
+- Validate/sanitize all incoming data on backend
+- Consider adding a per-company secret key check
 
 <br>
 
 ## License
 
-MIT License  
-Feel free to use, modify, and distribute.
+MIT License
 
-<br>
+Built with ❤️ by [BriskLabs](https://www.brisklabs.dev)  
+Follow me on X: [@roger_molas](https://x.com/roger_molas)
 
-**Built with ❤️ by [BriskLabs](https://www.brisklabs.dev)**  
-Questions or improvements? → [@roger_molas on X](https://x.com/roger_molas)
+```
