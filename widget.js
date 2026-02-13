@@ -20,7 +20,8 @@
     buttonText: script.dataset.buttonText || '🛒',
     buttonColor: script.dataset.buttonColor || '#2563eb',
     defaultView: script.dataset.view === 'card' ? 'grid' : 'list',
-    customTrigger: script.dataset.customTrigger || null,   // NEW: CSS selector for custom trigger
+    orderNote: script.dataset.orderNote || null,  
+    customTrigger: script.dataset.customTrigger || null,
     products: []
   };
 
@@ -147,44 +148,26 @@
       .orw-qty-btn, .orw-remove-btn { width: 36px; height: 36px; }
       .orw-send-btn { padding: 16px; font-size: 16px; }
     }
-    .orw-footer {
-        margin-top: 24px;
-        padding-top: 16px;
-        border-top: 1px solid var(--border);
-        text-align: center;
-        font-size: 12px;
-        color: #64748b;
-        line-height: 1.5;
-    }
 
-    .orw-footer a {
-        color: var(--primary);
-        text-decoration: none;
-        font-weight: 500;
-        transition: color 0.2s ease;
-    }
-
+    .orw-footer { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); text-align: center; font-size: 12px; color: #64748b; line-height: 1.5;}
+    .orw-footer a { color: var(--primary); text-decoration: none; font-weight: 500; transition: color 0.2s ease;}
     .orw-footer a:hover,
-    .orw-footer a:focus {
-        color: var(--primary-dark);
-        text-decoration: underline;
-    }
+    .orw-footer a:focus { color: var(--primary-dark); text-decoration: underline; }
+    @media (max-width: 768px) { .orw-footer { font-size: 11px; margin-top: 20px; padding-top: 12px; } }
 
-    @media (max-width: 768px) {
-        .orw-footer {
-            font-size: 11px;
-            margin-top: 20px;
-            padding-top: 12px;
-        }
-    }
+    .orw-note { background: #fff7e6; border-left: 5px solid #ff9800; padding: 16px 20px; border-radius: 10px; margin: 20px 0; font-size: 0.85rem; color: #333; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .orw-note strong { display: block; margin-bottom: 8px; font-size: 0.8rem; color: #ff9800; }
+    .orw-note p { margin: 4px 0;}
+    @media (max-width: 600px) { .orw-note { padding: 14px; } }
 
     h2 { margin: 0 0 16px; font-size: 14px; text-align: center; font-weight: 600; }
     .orw-close { position: absolute; top: 12px; right: 16px; font-size: 1.8em; cursor: pointer; color: #6b7280; }
     .orw-close:hover { color: #374151; }
 
     .orw-tabs { display: flex; margin: 0 -16px 16px; border-bottom: 1px solid var(--border); }
-    .orw-tab-btn { flex: 1; padding: 12px; background: transparent; border: none; font-weight: 600; color: #64748b; cursor: pointer; font-size: 14px; }
+    .orw-tab-btn { display: flex; flex: 1; align-items: center; gap: 8px; padding: 10px 18px;  background: transparent;  border: none; font-weight: 600;  color: #64748b;  cursor: pointer;  font-size: 16px; justify-content: center;}
     .orw-tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
+    .orw-tab-badge {  background: #ff9800; color: white;width: 24px;height: 24px; display: flex; align-content: center; border-radius: 50%; font-size: 12px; font-weight: bold; line-height: 1; margin-left: 6px; }
 
     .orw-tab-content { display: none; }
     .orw-tab-content.active { display: block; }
@@ -254,7 +237,10 @@
 
       <div class="orw-tabs">
         <button class="orw-tab-btn active" data-tab="products">Products</button>
-        <button class="orw-tab-btn" data-tab="order">Checkout</button>
+        <button class="orw-tab-btn" data-tab="order">
+          Checkout 
+           <div id="orw-tab-badge" class="orw-tab-badge">0</div> 
+        </button>
       </div>
 
       <div id="orw-products-tab" class="orw-tab-content active">
@@ -279,7 +265,11 @@
 
         <div class="orw-cart-summary" id="orw-cart-summary" style="display:none;">
           <h3 style="text-align:center; margin:0 0 16px;">Your Order</h3>
+
+          <div id="orw-note"></div>
+
           <div id="orw-cart-items"></div>
+          
           <div class="orw-total" id="orw-cart-total">Total: ${config.currency}0.00</div>
           <button class="orw-send-btn" id="orw-send-order">Place Order</button>
         </div>
@@ -305,7 +295,8 @@
   const cartTotal   = shadow.getElementById('orw-cart-total');
   const sendBtn     = shadow.getElementById('orw-send-order');
   const status      = shadow.getElementById('orw-status');
-
+  const orderNote   = shadow.getElementById('orw-note');
+  const tabBadge    = shadow.getElementById("orw-tab-badge");
   let cart = [];
   let viewMode = config.defaultView;
 
@@ -314,6 +305,17 @@
   // ─── Custom Trigger + Default FAB Logic ───────────
   let fab = null;
   let cartBadge = null;
+
+  // Append Note
+  if (config.orderNote) {
+    let noteOrder = `
+      <div class="orw-note">
+        <strong>Note:</strong>
+        <p>${config.orderNote}</p>
+      </div>
+    `;
+    orderNote.innerHTML = noteOrder;
+  }
 
   if (!config.customTrigger) {
     // Default FAB mode
@@ -423,6 +425,19 @@
     }
   }
 
+  function updateCartBadge(count) {
+    if (tabBadge) {
+      if (count > 0) {
+        tabBadge.style.display = 'block';
+      } else {
+        tabBadge.style.display = 'none';
+      }
+      tabBadge.textContent = count;
+    } else {
+      console.log("Can't find the badge")
+    }
+  }
+
   function removeItem(id) {
     cart = cart.filter(i => i.id !== id);
     updateCartDisplay();
@@ -441,7 +456,8 @@
         cartBadge.style.display = 'none';
       }
     }
-
+    // Checkout badge
+    updateCartBadge(itemCount)
     if (cart.length === 0) {
       cartSummary.style.display = 'none';
       return;
@@ -510,7 +526,7 @@
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      status.innerHTML = '✅ Order placed successfully!<br>Thank you!';
+      status.innerHTML = '✅ Order placed successfully!<br> You will be notified through your provided contact details once the seller confirms your order.<br>Thank you!';
       status.className = 'orw-success';
       status.style.display = 'block';
 
