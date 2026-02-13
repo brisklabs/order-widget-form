@@ -12,7 +12,6 @@ A lightweight, customizable, embeddable **ordering form widget** for websites �
 - Mobile-first: centered panel on phones
 - Style isolation via Shadow DOM + `orw-` prefixed classes
 - Optional order note banner
-- Footer credit to brisklabs.dev
 
 <br>
 
@@ -21,20 +20,21 @@ A lightweight, customizable, embeddable **ordering form widget** for websites �
 ### 1. Default FAB (with SVG cart icon)
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/brisklabs-dev/order-widget@latest/widget.js"
+<script src="https://cdn.jsdelivr.net/gh/brisklabs/order-widget-form@latest/widget.js"
   async
   data-title="Place Your Order"
-  data-submit-url="https://order-widget-dyno-api.brisklabs-dev.deno.net/"
+  data-submit-url="https://order-widget-dyno-api.brisklabs-dev.deno.net/" <-- Your API endpoint required -->
   data-button-color="#d97706"
   data-currency="₱"
   data-view="list"
-  data-host="brisklabs.dev"
   data-order-note="Orders are processed within 24 hours. Delivery available in Iloilo City only."
   data-products='[
-    {"id":"halo","name":"Premium Halo-halo","price":95,"image":null,"description":"Ube ice cream, leche flan, red beans, sago, macapuno, pinipig"},
-    {"id":"flan","name":"Leche Flan","price":55,"image":"https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400","description":"Silky caramel custard made with fresh eggs and condensed milk"},
-    {"id":"buko","name":"Buko Juice","price":45,"image":null,"description":"Fresh young coconut water – naturally sweet and very refreshing"}
-  ]'
+    { "id": "halo", "name": "Premium Halo-halo", "price": 109.45, "image": "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?w=400", "description": "Ube ice cream, leche flan, red beans, sago, macapuno, pinipig – classic Pinoy goodness"},
+    { "id": "flan", "name": "Leche Flan", "price": 50.34, "image": "https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400", "description": "Silky caramel custard made with fresh eggs and condensed milk"},
+    { "id": "buko", "name": "Buko Juice", "price": 45.01, "image": "https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=400", "description": "Fresh young coconut water – naturally sweet and very refreshing"},
+    { "id": "cake", "name": "Mango Float Cake", "price": 89.00, "image": "https://images.unsplash.com/photo-1551024601-bec78aea704b?w=400", "description": "Creamy layered mango graham dessert served chilled"},
+    { "id": "halo1", "name": "Classic Halo-halo", "price": 95.00, "image": null, "description": "Traditional shaved ice dessert with sweet beans, jelly, milk, and ube" }
+    ]'
 ></script>
 ```
 
@@ -43,12 +43,12 @@ A lightweight, customizable, embeddable **ordering form widget** for websites �
 ```html
 <button class="custom-order-btn">Order Now</button>
 
-<script src="..."
+<script src="https://cdn.jsdelivr.net/gh/brisklabs/order-widget-form@latest/widget.js"
   data-custom-trigger=".custom-order-btn"
   data-title="Place Your Order"
-  data-submit-url="https://order-widget-dyno-api.brisklabs-dev.deno.net/"
+  data-submit-url="https://order-widget-dyno-api.brisklabs-dev.deno.net/" 
   data-currency="₱"
-  data-host="brisklabs.dev"
+  data-view="list"
   data-products='[...]'
 ></script>
 ```
@@ -66,8 +66,7 @@ A lightweight, customizable, embeddable **ordering form widget** for websites �
 | `data-button-color`    | FAB background color                             | "#2563eb"            | "#d97706" (amber)                            |
 | `data-view`            | Default product view                             | "list"               | "list" or "card"                             |
 | `data-custom-trigger`  | CSS selector for custom open button(s)           | — (uses default FAB) | ".order-btn", "#my-btn"                      |
-| `data-host`            | Company/host identifier (sent to backend)        | "brisklabs.dev"      | "company2" (used for bot/channel selection)  |
-| `data-order-note`      | Optional note banner text                        | —                    | "Delivery in Iloilo only"                    |
+| `data-order-note`      | Optional note banner text                        | —                    | "Delivery fee added on top"                    |
 | `data-products`        | JSON array of products                           | —                    | See format below                             |
 
 ### Product object format
@@ -100,11 +99,6 @@ Your widget sends this JSON payload:
 }
 ```
 
-The backend selects bot token & channel based on `host`, formats a clean HTML message, and posts to Telegram.
-
-Live endpoint example:  
-`https://order-widget-dyno-api.brisklabs-dev.deno.net/`
-
 <br>
 
 ## Development
@@ -135,9 +129,8 @@ curl -X POST http://localhost:8000 -H "Content-Type: application/json" -d '{...}
 
 ## Security Notes
 
-- Never expose Telegram bot tokens client-side in production
 - Validate/sanitize all incoming data on backend
-- Consider adding a per-company secret key check
+- Consider adding a per-company secret key check for your payload
 
 <br>
 
