@@ -14,7 +14,7 @@
   // ─── Config ───────────────────────────────────────
   const config = {
     title: script.dataset.title || 'Quick Order',
-    submitUrl: script.dataset.submitUrl || 'https://order-widget-dyno-api.brisklabs-dev.deno.net/',
+    submitUrl: script.dataset.submitUrl || null,
     currency: script.dataset.currency || '₱',
     position: script.dataset.position || 'bottom-right',
     buttonColor: script.dataset.buttonColor || '#2563eb',
@@ -528,6 +528,13 @@
 
   // ─── Send Order ───────────────────────────────────
   async function sendOrder() {
+    if (!config.submitUrl) {
+      status.innerHTML = `❌ host url not found, Please provide a targer url for sending request`;
+      status.className = 'orw-status orw-error';
+      status.style.display = 'block';
+      return
+    }
+
     // Get form inputs
     const nameInput = shadow.querySelector('input[name="name"]');
     const addressInput = shadow.querySelector('input[name="address"]');
@@ -611,7 +618,7 @@
     sendBtn.textContent = 'Sending...';
 
     const payload = {
-      host: "localhost", //window.location.hostname,
+      host: "localhost",
       customer: {
         name: nameInput.value.trim(),
         address: addressInput.value.trim(),
