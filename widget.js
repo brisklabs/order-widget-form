@@ -14,7 +14,7 @@
   // ─── Config ───────────────────────────────────────
   const config = {
     title: script.dataset.title || 'Quick Order',
-    submitUrl: script.dataset.submitUrl || 'https://your-api.com/api/order',
+    submitUrl: script.dataset.submitUrl || 'https://order-widget-dyno-api.brisklabs-dev.deno.net/',
     currency: script.dataset.currency || '₱',
     position: script.dataset.position || 'bottom-right',
     buttonText: script.dataset.buttonText || '🛒',
@@ -199,9 +199,18 @@
     .orw-product-desc { margin-top: 6px; font-size: 12px; font-style: italic; color: #64748b; line-height: 1.45; }
     .orw-in-cart-badge { margin-top: 8px; display: inline-block; color: var(--primary); font-weight: 500; font-size: 12px; }
 
-    .orw-customer-form .orw-field { margin: 14px 0; }
+    .orw-customer-form .orw-field { position: relative; margin: 14px 0; }
     label { font-size: 13px; font-weight: 600; margin-bottom: 5px; display: block; }
     input, textarea { width: 100%; padding: 10px; font-size: 14px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; }
+    .orw-field.invalid input,
+    .orw-field.invalid textarea { border-color: #ef4444 !important; background-color: #fef2f2; animation: shake 0.5s ease-in-out; }
+    .orw-field .error-message { color: #ef4444; font-size: 12px; margin-top: 4px; display: none;}
+    .orw-field.invalid .error-message { display: block; }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
+      20%, 40%, 60%, 80% { transform: translateX(6px); }
+    }
 
     .orw-cart-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f1f5f9; border-radius: 10px; margin-bottom: 10px; font-size: 13px; }
     .orw-qty-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--primary); color: white; font-size: 1.1em; cursor: pointer; touch-action: manipulation; }
@@ -212,8 +221,8 @@
     .orw-send-btn:disabled { background: #9ca3af; cursor: not-allowed; }
 
     .orw-status { text-align: center; padding: 20px 12px; border-radius: 12px; font-size: 15px; font-weight: bold; margin: 24px 0; }
-    .orw-success { background: #ecfdf5; color: var(--success); }
-    .orw-error   { background: #fef2f2; color: var(--danger); }
+    .orw-status.orw-success { background: #ecfdf5; color: var(--success); }
+    .orw-status.orw-error   { background: #fef2f2; color: var(--danger); }
   `;
   shadow.appendChild(style);
 
@@ -230,7 +239,6 @@
 
   shadow.innerHTML += `
     ${fabHTML}
-
     <div class="orw-panel" id="orw-panel">
       <span class="orw-close">×</span>
       <h2>${config.title}</h2>
@@ -250,16 +258,16 @@
       <div id="orw-order-tab" class="orw-tab-content">
         <div class="orw-customer-form">
           <div class="orw-field">
-            <label>Your Name</label>
-            <input type="text" name="name" required placeholder="Juan Dela Cruz">
+            <input type="text" name="name" required placeholder="Enter your name">
           </div>
           <div class="orw-field">
-            <label>Contact (email / phone)</label>
-            <input type="text" name="contact" required placeholder="example@email.com or 0917...">
+            <input type="text" name="address" required placeholder="Enter your address (e.g unit, floor, street, barangay)">
           </div>
           <div class="orw-field">
-            <label>Notes / Special requests</label>
-            <textarea name="notes" rows="3" placeholder="Less ice, extra cheese, deliver after 5pm..."></textarea>
+            <input type="text" name="contact" required placeholder="Enter email or phone number">
+          </div>
+          <div class="orw-field">
+            <textarea name="notes" rows="3" placeholder="Notes/Special request (e.g less ice, extra cheese, deliver after 5pm...)"></textarea>
           </div>
         </div>
 
@@ -271,17 +279,16 @@
           <div id="orw-cart-items"></div>
 
           <div id="orw-status" class="orw-status" style="display:none;"></div>
-          
+            
           <div class="orw-total" id="orw-cart-total">Total: ${config.currency}0.00</div>
-          <button class="orw-send-btn" id="orw-send-order">Place Order</button>
+            <button class="orw-send-btn" id="orw-send-order">Place Order</button>
+          </div>
         </div>
-      </div>
 
         <p class="orw-footer">
             <span style="font-size:14px;">⚡</span> built by: 
             <a href="https://www.brisklabs.dev" target="_blank" rel="noopener noreferrer">brisklabs.dev</a>
         </p>
-        
     </div>
   `;
 
@@ -379,7 +386,7 @@
             <div style="flex:1;">
               <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px;">
                 <span class="orw-product-name">${p.name}</span>
-                <span class="orw-product-price">${config.currency}${p.price}</span>
+                <span class="orw-product-price">${formatCurrency(p.price)}</span>
               </div>
               ${desc}
               ${badge}
@@ -392,7 +399,7 @@
             <img src="${imgSrc}" class="orw-product-image" alt="${p.name}">
             <div style="padding:8px 0; flex:1;">
               <div class="orw-product-name">${p.name}</div>
-              <div class="orw-product-price">${config.currency}${p.price}</div>
+              <div class="orw-product-price">${formatCurrency(p.price)}</div>
               ${desc}
               ${badge ? `<div style="margin-top:auto; text-align:center;">${badge}</div>` : ''}
             </div>
@@ -475,7 +482,7 @@
       row.innerHTML = `
         <div style="flex:1">
           <div style="font-weight:500">${item.name}</div>
-          <div>${config.currency}${item.price} × ${item.quantity}</div>
+          <div>${formatCurrency(item.price)} × ${item.quantity}</div>
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
           <button class="orw-qty-btn" data-delta="-1" data-id="${item.id}">-</button>
@@ -487,7 +494,8 @@
       cartItems.appendChild(row);
     });
 
-    cartTotal.textContent = `Total: ${config.currency}${total.toFixed(2)}`;
+    // cartTotal.textContent = `Total: ${config.currency}${total.toFixed(2)}`;
+    cartTotal.textContent = `Total: ${formatCurrency(total)}`;
 
     cartItems.querySelectorAll('.orw-qty-btn').forEach(btn => {
       btn.onclick = () => updateQuantity(btn.dataset.id, Number(btn.dataset.delta));
@@ -497,24 +505,111 @@
     });
   }
 
+  function formatCurrency(price) {
+    return `${config.currency}${Number(price).toLocaleString('en-PH', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })}`;
+  }
+
   // ─── Send Order ───────────────────────────────────
   async function sendOrder() {
-    const name    = shadow.querySelector('[name="name"]').value.trim();
-    const contact = shadow.querySelector('[name="contact"]').value.trim();
-    const notes   = shadow.querySelector('[name="notes"]').value.trim();
+    // Get form inputs
+    const nameInput = shadow.querySelector('input[name="name"]');
+    const addressInput = shadow.querySelector('input[name="address"]');
+    const contactInput = shadow.querySelector('input[name="contact"]');
+    const notesInput = shadow.querySelector('textarea[name="notes"]');
 
-    if (!name || !contact) {
-      alert('Please enter your name and contact information');
+    // Reset previous errors
+    [nameInput, addressInput, contactInput].forEach(input => {
+      if (input) {
+        const field = input.closest('.orw-field');
+        if (field) {
+          field.classList.remove('invalid');
+          const err = field.querySelector('.error-message');
+          if (err) err.remove();
+        }
+      }
+    });
+
+    let isValid = true;
+    let firstInvalid = null;
+
+    // Helper to show error
+    function markInvalid(input, msg) {
+      if (!input) return;
+      const field = input.closest('.orw-field');
+      if (!field) return;
+
+      field.classList.add('invalid');
+
+      let err = field.querySelector('.error-message');
+      if (!err) {
+        err = document.createElement('div');
+        err.className = 'error-message';
+        field.appendChild(err);
+      }
+      err.textContent = msg;
+
+      isValid = false;
+      if (!firstInvalid) firstInvalid = input;
+    }
+
+    // Validation rules (all required fields)
+    if (!nameInput?.value.trim()) {
+      markInvalid(nameInput, "Name is required");
+    }
+
+    if (!addressInput?.value.trim()) {
+      markInvalid(addressInput, "Address is required");
+    }
+
+    if (!contactInput?.value.trim()) {
+      markInvalid(contactInput, "Contact is required");
+    } else {
+      const contactVal = contactInput.value.trim();
+      // Basic validation: email or phone (Philippine format or international)
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactVal) && 
+          !/^(09\d{9}|\+639\d{9}|0\d{1,2}\s?\d{7,})$/.test(contactVal)) {
+        markInvalid(contactInput, "Enter a valid email or Philippine phone number");
+      }
+    }
+
+    // If invalid → shake, focus first error, stop
+    if (!isValid) {
+      if (firstInvalid) {
+        firstInvalid.focus();
+        const field = firstInvalid.closest('.orw-field');
+        if (field) {
+          // Trigger shake
+          field.classList.add('invalid');
+          // Remove animation class after it ends (so it can re-trigger)
+          setTimeout(() => field.classList.remove('invalid'), 1000);
+        }
+      }
+      sendBtn.disabled = false;
+      sendBtn.textContent = 'Place Order';
       return;
     }
 
+    // Form is valid → submit
     sendBtn.disabled = true;
     sendBtn.textContent = 'Sending...';
 
     const payload = {
-      host: "brisklabs", //window.location.hostname,   // automatically sends the current domain (e.g. "brisklabs.dev")
-      customer: { name, contact, notes: notes || undefined },
-      items: cart.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity })),
+      host: "brisklabs.dev", // or use window.location.hostname if dynamic
+      customer: {
+        name: nameInput.value.trim(),
+        address: addressInput.value.trim(),
+        contact: contactInput.value.trim(),
+        notes: notesInput?.value.trim() || undefined
+      },
+      items: cart.map(i => ({ 
+        id: i.id, 
+        name: i.name, 
+        price: i.price, 
+        quantity: i.quantity 
+      })),
       total: cart.reduce((sum, i) => sum + i.price * i.quantity, 0),
       timestamp: new Date().toISOString()
     };
@@ -528,21 +623,23 @@
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      status.innerHTML = '✅ Order placed successfully!<br> You will be notified through your provided contact details once the seller confirms your order.<br>Thank you!';
-      status.className = 'orw-success';
+      status.innerHTML = '✅ Order placed successfully!<br>You will be notified through your provided contact details once the seller confirms your order.<br>Thank you!';
+      status.className = 'orw-status orw-success';
       status.style.display = 'block';
 
+      // Clear cart and close after delay
       setTimeout(() => {
         cart = [];
         updateCartDisplay();
         status.style.display = 'none';
+        panel.classList.remove('open');
         switchTab('products');
-      }, 4000);
+      }, 5000);
 
     } catch (err) {
       console.error(err);
-      status.innerHTML = '❌ Failed to place order<br>Please try again';
-      status.className = 'orw-error';
+      status.innerHTML = '❌ Failed to place order<br>Please try again or contact us directly.';
+      status.className = 'orw-status orw-error';
       status.style.display = 'block';
     } finally {
       sendBtn.disabled = false;
