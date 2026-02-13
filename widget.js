@@ -511,11 +511,13 @@
     sendBtn.textContent = 'Sending...';
 
     const payload = {
+      host: "brisklabs", //window.location.hostname,   // automatically sends the current domain (e.g. "brisklabs.dev")
       customer: { name, contact, notes: notes || undefined },
       items: cart.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity })),
       total: cart.reduce((sum, i) => sum + i.price * i.quantity, 0),
       timestamp: new Date().toISOString()
     };
+
 
     try {
       const res = await fetch(config.submitUrl, {
