@@ -1,5 +1,8 @@
 # BriskLabs Order Widget
 
+![Website Preview](https://github.com/brisklabs/order-widget-form/blob/main/widget-demo.png?raw=true)
+
+
 A lightweight, customizable, embeddable **ordering form widget** for websites — perfect for small businesses, food stalls, cafes, services, or any setup that needs quick order collection (e.g. forwarded to Telegram or your backend).
 
 - Floating action button (FAB) with **default SVG cart icon** (no text)
