@@ -21,6 +21,7 @@
     defaultView: script.dataset.view === 'card' ? 'grid' : 'list',
     orderNote: script.dataset.orderNote || null,  
     customTrigger: script.dataset.customTrigger || null,
+    submitMethod: script.dataset.submitMethod || 'api', 
     products: []
   };
 
@@ -561,13 +562,6 @@
 
   // ─── Send Order ───────────────────────────────────
   async function sendOrder() {
-    if (!config.submitUrl) {
-      status.innerHTML = `❌ host url not found, Please provide a targer url for sending request`;
-      status.className = 'orw-status orw-error';
-      status.style.display = 'block';
-      return
-    }
-
     // Get form inputs
     const nameInput = shadow.querySelector('input[name="name"]');
     const addressInput = shadow.querySelector('input[name="address"]');
@@ -650,6 +644,19 @@
     sendBtn.disabled = true;
     sendBtn.textContent = 'Sending...';
 
+    if (config.submitMethod === 'whatsApp') {
+      sendOrderViaWhatApp(nameInput, addressInput, contactInput, notesInput)
+      return
+    }
+
+    // API server sending
+    if (!config.submitUrl) {
+      status.innerHTML = `❌ host url not found, Please provide a targer url for sending request`;
+      status.className = 'orw-status orw-error';
+      status.style.display = 'block';
+      return
+    }
+
     const payload = {
       host: window.location.hostname,
       customer: {
@@ -676,17 +683,15 @@
       });
       let result;
       try {
-        result = await res.json();  // ← this reads your custom { success, status, message, data, error }
+        result = await res.json();
       } catch (parseErr) {
-        console.error("JSON parse failed:", parseErr);
         throw new Error("Server returned invalid response");
       }
-      // Check the custom success field (not just res.ok)
+      
       if (!result.success) {
         throw new Error(result.message || result.error || "Order failed on server");
       }
 
-      // Success - use message from API if present, fallback to your text
       const successMsg = result.message || 
         'Order placed successfully!<br>You will be notified through your provided contact details once the seller confirms your order.<br>Thank you!';
 
@@ -710,7 +715,6 @@
       if (err.message.includes("API Response")) {
         errorText = err.message;
       }
-
       status.innerHTML = `❌ ${errorText}<br>Please try again or contact us directly.`;
       status.className = 'orw-status orw-error';
       status.style.display = 'block';
@@ -719,6 +723,99 @@
       sendBtn.textContent = 'Place Order';
     }
   }
+
+
+  async function sendOrderViaWhatApp(nameInput, addressInput, contactInput, notesInput) {
+  const script = document.currentScript || document.querySelector('script[src*="order-widget-form"]');
+  const config = {
+    whatsapp: script?.dataset.whatsapp,
+    viber: script?.dataset.viber,
+    messenger: script?.dataset.messenger,
+    submitMethod: script?.dataset.submitMethod || 'api', // 'whatsapp', 'both', 'api'
+    messagePrefix: script?.dataset.whatsappMessagePrefix || `New order from ${window.location.hostname}:`,
+  };
+
+  // Build order text (same info as your current payload)
+  const customer = {
+    name: nameInput.value.trim(),
+    address: addressInput.value.trim(),
+    contact: contactInput.value.trim(),
+    notes: notesInput?.value.trim() || ''
+  };
+
+  const itemsText = cart.map(i => 
+    `${i.quantity}× ${i.name} — ${formatCurrency(i.price * i.quantity)}`
+  ).join('\n');
+
+  const total = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const orderText = 
+    `${config.messagePrefix}\n\n` +
+    `Customer: ${customer.name}\n` +
+    `Contact: ${customer.contact}\n` +
+    `Address: ${customer.address}\n` +
+    (customer.notes ? `Notes: ${customer.notes}\n\n` : '\n') +
+    `Items:\n${itemsText}\n\n` +
+    `TOTAL: ${formatCurrency(total)}\n` +
+    `Time: ${new Date().toLocaleString('en-PH')}`;
+
+  const encodedMessage = encodeURIComponent(orderText);
+
+  let opened = false;
+
+  // Priority: WhatsApp
+  if (config.whatsapp && (config.submitMethod === 'whatsapp' || config.submitMethod === 'both')) {
+    const waUrl = `https://wa.me/${config.whatsapp}?text=${encodedMessage}`;
+    window.open(waUrl, '_blank');
+    opened = true;
+  }
+
+  // Fallback/also: Viber (viber://chat?number=...)
+  if (!opened && config.viber && (config.submitMethod === 'whatsapp' || config.submitMethod === 'both')) {
+    const viberUrl = `viber://chat?number=%2B${config.viber}&draft=${encodedMessage}`;
+    window.open(viberUrl, '_blank');
+    opened = true;
+  }
+
+  // Fallback/also: Messenger (m.me link with prefill is limited, usually just opens chat)
+  if (!opened && config.messenger && (config.submitMethod === 'whatsapp' || config.submitMethod === 'both')) {
+    // Messenger doesn't support reliable prefill via URL params anymore
+    // Just open the chat page
+    window.open(config.messenger, '_blank');
+    opened = true;
+  }
+
+  // If no messaging option → fallback to original POST (or show error)
+  if (!opened && config.submitUrl && config.submitMethod !== 'whatsapp') {
+    // Your existing fetch code here...
+    // await fetch(config.submitUrl, { ... })
+  } else if (!opened) {
+    // No method configured
+    status.innerHTML = 'No messaging or backend configured. Please contact us directly.';
+    status.className = 'orw-status orw-error';
+    status.style.display = 'block';
+    return;
+  }
+
+  // Show success UI (same as your current success)
+  status.innerHTML = `
+    Order sent! Thank you ${customer.name}!<br>
+    ${config.whatsapp ? 'Check WhatsApp to confirm.' : 'We will get back to you soon.'}
+  `;
+  status.className = 'orw-status orw-success';
+  status.style.display = 'block';
+
+  // Reset cart after delay (keep your existing timeout logic)
+  setTimeout(() => {
+    cart = [];
+    updateCartDisplay();
+    status.style.display = 'none';
+    panel.classList.remove('open');
+    switchTab('products');
+  }, 5000);
+
+  sendBtn.disabled = false;
+  sendBtn.textContent = 'Place Order';
+}
 
   // ─── Tab Switching ────────────────────────────────
   function switchTab(tabName) {
