@@ -13,7 +13,6 @@ A lightweight, customizable, embeddable **ordering form widget** for websites â€
 - Customer name, address, contact, notes form
 - Currency formatting with commas & cents (â‚±1,234.50)
 - Mobile-first: centered panel on phones
-- Style isolation via Shadow DOM + `orw-` prefixed classes
 - Optional order note banner
 
 <br>
