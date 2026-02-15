@@ -11,6 +11,12 @@
       background: #f8f9fa;
     }
     h1 { color: #333; }
+    button {
+      margin: 0.5rem;
+      padding: 0.8rem 1.5rem;
+      font-size: 1rem;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -18,21 +24,90 @@
   <h1>Welcome to my test shop</h1>
   <p>Scroll down or just wait — click the floating button if it appears.</p>
 
-  <button>Custom Triger</button>
-  <script src="https://cdn.jsdelivr.net/gh/brisklabs/order-widget-form@latest/widget.js"
+  <!-- Custom triggers you can use depending on config -->
+  <button id="open-widget">Open Menu / Order</button>
+  <script src="./widget.js"
     async
     data-title="Place Order"
+    data-order-note="Delivery on Top 300"
     data-button-color="green"
     data-currency="₱"
     data-view="list"
     data-products='[
-    { "id": "halo", "name": "Premium Halo-halo", "price": 109.45, "image": "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?w=400", "description": "Ube ice cream, leche flan, red beans, sago, macapuno, pinipig – classic Pinoy goodness"},
-    { "id": "flan", "name": "Leche Flan", "price": 50.34, "image": "https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400", "description": "Silky caramel custard made with fresh eggs and condensed milk"},
-    { "id": "buko", "name": "Buko Juice", "price": 45.01, "image": "https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=400", "description": "Fresh young coconut water – naturally sweet and very refreshing"},
-    { "id": "cake", "name": "Mango Float Cake", "price": 89.00, "image": "https://images.unsplash.com/photo-1551024601-bec78aea704b?w=400", "description": "Creamy layered mango graham dessert served chilled"},
-    { "id": "halo1", "name": "Classic Halo-halo", "price": 95.00, "image": null, "description": "Traditional shaved ice dessert with sweet beans, jelly, milk, and ube" }
+      {
+        "type": "Breakfast",
+        "items": [
+          {
+            "id": "rice-egg",
+            "name": "Rice with Egg",
+            "price": 65.00,
+            "image": "https://norecipes.com/wp-content/uploads/2018/08/tosilog-recipe-004.jpg",
+            "description": "Steamed white rice served with perfectly cooked sunny-side-up egg – simple, hearty Filipino breakfast"
+          }
+        ]
+      },
+      {
+        "type": "Lunch",
+        "items": [
+          {
+            "id": "adobo",
+            "name": "Chicken Adobo",
+            "price": 145.00,
+            "image": "https://thumbs.dreamstime.com/b/close-up-bowl-rice-chicken-adobo-filipino-food-generative-ai-278459301.jpg",
+            "description": "Tender chicken cooked in soy sauce, vinegar, garlic, and spices – classic Filipino comfort food"
+          },
+          {
+            "id": "afritada",
+            "name": "Chicken Afritada",
+            "price": 150.00,
+            "image": "https://panlasangpinoy.com/wp-content/uploads/2018/12/Chicken-Afritada-Recipe-Panlasang-Pinoy.jpg",
+            "description": "Chicken stewed in tomato sauce with potatoes, carrots, and bell peppers – rich and savory"
+          },
+          {
+            "id": "steamed-fish",
+            "name": "Steamed Fish",
+            "price": 135.00,
+            "image": "https://www.allrecipes.com/thmb/f_2MwcnL5O3h9BOvOUW2iVN19PI=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/140570-steamed-fish-with-ginger-JF-R309054_14177_4x3-3da7923d8ae3416594f15599301c8147.jpg",
+            "description": "Fresh fish steamed with ginger, onions, and soy sauce – light, healthy, and flavorful"
+          }
+        ]
+      },
+      {
+        "type": "Dessert",
+        "items": [
+          {
+            "id": "halo",
+            "name": "Premium Halo-halo",
+            "price": 109.45,
+            "image": "https://assets.bonappetit.com/photos/60e46c6701084801b06de2a3/16:9/w_2190,h_1232,c_limit/Halo-Halo-Recipe-2021.jpg",
+            "description": "Ube ice cream, leche flan, red beans, sago, macapuno, pinipig – classic Pinoy goodness"
+          },
+          {
+            "id": "halo1",
+            "name": "Classic Halo-halo",
+            "price": 95.00,
+            "image": "https://www.foodandwine.com/thmb/oybMSWdgpwqYxBW9EFSdIUmf57U=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/halo-halo-FT-RECIPE0924-28931a658de3439d9719f83d5a6dfc2c.jpeg",
+            "description": "Traditional shaved ice dessert with sweet beans, jelly, milk, and ube"
+          },
+          {
+            "id": "flan",
+            "name": "Leche Flan",
+            "price": 50.34,
+            "image": "https://www.nestlegoodnes.com/ph/sites/default/files/styles/3_2_1920px_width/public/2025-11/Leche%20Flan.png.webp?itok=xysl2QkJ",
+            "description": "Silky caramel custard made with fresh eggs and condensed milk"
+          },
+          {
+            "id": "cake",
+            "name": "Mango Float Cake",
+            "price": 89.00,
+            "image": "https://cdn.sanity.io/images/f3knbc2s/production/13cd1ca7a1cb3a925f63d496ebbb22bacf10d422-2500x1600.jpg?auto=format",
+            "description": "Creamy layered mango graham dessert served chilled"
+          }
+        ]
+      }
     ]'
   ></script>
+
 
 </body>
 </html>

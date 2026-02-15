@@ -200,7 +200,21 @@
     .orw-product-image { object-fit: cover; border-radius: 8px; }
 
     .orw-products-list .orw-product-image { width: 80px; height: 80px; }
+    .orw-products-list .orw-section-title { margin: 36px 0 10px 0; font-size: 1.5rem; font-weight: 700; border-bottom: 2px solid #eee; padding-bottom: 8px;}
+
+
     .orw-products-grid .orw-product-image { width: 100%; height: 140px; }
+   .orw-products-grid .orw-section-title {
+  grid-column: 1 / -1; 
+  margin: 32px 0 16px 0;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #222;
+  padding-left: 8px; 
+ 
+  border-bottom: 2px solid #eee;
+  padding-bottom: 8px;
+}
 
     .orw-product-name { font-weight: 600; font-size: 14px; margin: 0 0 4px; }
     .orw-product-price { color: #059669; font-weight: bold; font-size: 14px; }
@@ -373,11 +387,69 @@
   }
 
   // ─── Render Products ──────────────────────────────
+  // function renderProducts() {
+  //   productsContainer.innerHTML = '';
+  //   productsContainer.className = viewMode === 'list' ? 'orw-products-list' : 'orw-products-grid';
+
+  //   config.products.forEach(p => {
+  //     const inCart = cart.find(i => i.id === p.id);
+  //     const qty = inCart ? inCart.quantity : 0;
+
+  //     const imgSrc = (p.image && p.image.trim()) ? p.image.trim() : placeholderImage;
+
+  //     const desc = (p.description && p.description.trim())
+  //       ? `<div class="orw-product-desc">${p.description.trim()}</div>`
+  //       : '';
+
+  //     const badge = qty > 0
+  //       ? `<div class="orw-in-cart-badge">In cart: ${qty}</div>`
+  //       : '';
+
+  //     let html = '';
+
+  //     if (viewMode === 'list') {
+  //       html = `
+  //         <div style="display:flex; gap:12px; align-items:flex-start;">
+  //           <img src="${imgSrc}" class="orw-product-image" alt="${p.name}">
+  //           <div style="flex:1;">
+  //             <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px;">
+  //               <span class="orw-product-name">${p.name}</span>
+  //               <span class="orw-product-price">${formatCurrency(p.price)}</span>
+  //             </div>
+  //             ${desc}
+  //             ${badge}
+  //           </div>
+  //         </div>
+  //       `;
+  //     } else {
+  //       html = `
+  //         <div style="display:flex; flex-direction:column; height:100%;">
+  //           <img src="${imgSrc}" class="orw-product-image" alt="${p.name}">
+  //           <div style="padding:8px 0; flex:1;">
+  //             <div class="orw-product-name">${p.name}</div>
+  //             <div class="orw-product-price">${formatCurrency(p.price)}</div>
+  //             ${desc}
+  //             ${badge ? `<div style="margin-top:auto; text-align:center;">${badge}</div>` : ''}
+  //           </div>
+  //         </div>
+  //       `;
+  //     }
+
+  //     const el = document.createElement('div');
+  //     el.className = viewMode === 'list' ? 'orw-product-item' : 'orw-product-card';
+  //     el.innerHTML = html;
+  //     el.addEventListener('click', () => addToCart(p));
+  //     productsContainer.appendChild(el);
+  //   });
+  // }
+
   function renderProducts() {
     productsContainer.innerHTML = '';
-    productsContainer.className = viewMode === 'list' ? 'orw-products-list' : 'orw-products-grid';
+    productsContainer.className = viewMode === 'list' 
+      ? 'orw-products-list' 
+      : 'orw-products-grid';
 
-    config.products.forEach(p => {
+    function createProductElement(p) {
       const inCart = cart.find(i => i.id === p.id);
       const qty = inCart ? inCart.quantity : 0;
 
@@ -425,8 +497,35 @@
       el.className = viewMode === 'list' ? 'orw-product-item' : 'orw-product-card';
       el.innerHTML = html;
       el.addEventListener('click', () => addToCart(p));
-      productsContainer.appendChild(el);
-    });
+      return el;
+    }
+
+    const isGrouped = Array.isArray(config.products) && 
+      config.products.length > 0 && 
+      config.products[0] && 
+      'type' in config.products[0] && 
+      'items' in config.products[0];
+
+    if (isGrouped) {
+      config.products.forEach(category => {
+        if (!category?.type || !Array.isArray(category.items) || category.items.length === 0) return;
+
+        // Section heading
+        const heading = document.createElement('h2');
+        heading.className = 'orw-section-title';
+        heading.textContent = category.type;
+        productsContainer.appendChild(heading);
+
+        // Products
+        category.items.forEach(product => {
+          productsContainer.appendChild(createProductElement(product));
+        });
+      });
+    } else {
+      (config.products || []).forEach(product => {
+        productsContainer.appendChild(createProductElement(product));
+      });
+    }
   }
 
   // ─── Cart Logic ───────────────────────────────────
