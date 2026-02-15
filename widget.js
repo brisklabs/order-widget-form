@@ -3,45 +3,78 @@
   if (window.brisklabsOrderWidgetLoaded) return;
   window.brisklabsOrderWidgetLoaded = true;
 
-  const script = document.currentScript ||
-    Array.from(document.scripts).find(s => s.src.includes('widget.js'));
+  const script =
+    document.currentScript ||
+    Array.from(document.scripts).find((s) => s.src.includes("widget.js"));
 
   if (!script) {
-    console.error('Widget script tag not found');
+    console.error("Widget script tag not found");
     return;
   }
 
   // ─── Config ───────────────────────────────────────
   const config = {
-    title: script.dataset.title || 'Quick Order',
+    title: script.dataset.title || "Quick Order",
     submitUrl: script.dataset.submitUrl || null,
-    currency: script.dataset.currency || '₱',
-    position: script.dataset.position || 'bottom-right',
-    buttonColor: script.dataset.buttonColor || '#2563eb',
-    defaultView: script.dataset.view === 'card' ? 'grid' : 'list',
-    orderNote: script.dataset.orderNote || null,  
+    currency: script.dataset.currency || "₱",
+    position: script.dataset.position || "bottom-right",
+    buttonColor: script.dataset.buttonColor || "#2563eb",
+    defaultView: script.dataset.view === "card" ? "grid" : "list",
+    orderNote: script.dataset.orderNote || null,
     customTrigger: script.dataset.customTrigger || null,
-    submitMethod: script.dataset.submitMethod || 'api',  // messenging (whatapp, viber, messager)
+    submitMethod: script.dataset.submitMethod || "api", // messenging (whatapp, viber, messager)
     whatsapp: script.dataset.whatsapp || null,
-    viber:script.dataset.viber || null,
-    messenger:script.dataset.messenger || null,
-    products: []
+    viber: script.dataset.viber || null,
+    messenger: script.dataset.messenger || null,
+    productsUrl: script.dataset.productsUrl || null,
+    products: [],
   };
 
-  try {
-    config.products = JSON.parse(script.dataset.products || '[]');
-    if (!Array.isArray(config.products)) config.products = [];
-  } catch (e) {
-    console.error('Invalid products JSON', e);
-    config.products = [{ id: 'error', name: 'Contact us', price: 0 }];
+  // ─── Load Products ───────────────────────────────────────
+  // This block should come immediately after config
+  if (script.dataset.productsUrl) {
+    fetch(script.dataset.productsUrl)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(
+            `Failed to load products: ${response.status} ${response.statusText}`,
+          );
+        }
+        return response.json();
+      })
+      .then((data) => {
+        config.products = Array.isArray(data) ? data : [];
+        console.log(`Products loaded from ${script.dataset.productsUrl} — ${config.products.length} categories`);
+        // Important: render or refresh UI after products are ready
+        if (typeof renderProducts === "function") {
+          renderProducts(); // ← call your render function here
+        }
+      })
+      .catch((err) => {
+        console.error("Error loading products.json:", err);
+        config.products = [];
+      });
+  } else if (script.dataset.products) {
+    // Fallback: old inline data-products attribute
+    try {
+      config.products = JSON.parse(script.dataset.products || "[]");
+      if (!Array.isArray(config.products)) config.products = [];
+      console.log("Products loaded from inline data-products");
+    } catch (e) {
+      console.error("Invalid inline products JSON", e);
+      config.products = [];
+    }
+  } else {
+    console.warn("No products source found (missing data-products or data-products-url)");
+    config.products = [];
   }
 
   // ─── Widget + Shadow DOM ──────────────────────────
-  const widget = document.createElement('div');
-  widget.id = 'orw-brisklabs-order-widget';
-  const shadow = widget.attachShadow({ mode: 'open' });
+  const widget = document.createElement("div");
+  widget.id = "orw-brisklabs-order-widget";
+  const shadow = widget.attachShadow({ mode: "open" });
 
-  const style = document.createElement('style');
+  const style = document.createElement("style");
   style.textContent = `
     :host {
       font-family: system-ui, sans-serif;
@@ -129,14 +162,22 @@
     }
 
     /* Position overrides */
-    ${config.position === 'bottom-right' ? `
+    ${
+      config.position === "bottom-right"
+        ? `
       .orw-fab-container { right: 24px; }
       .orw-panel        { right: 24px; }
-    ` : ''}
-    ${config.position === 'bottom-left' ? `
+    `
+        : ""
+    }
+    ${
+      config.position === "bottom-left"
+        ? `
       .orw-fab-container { left: 24px; }
       .orw-panel        { left: 24px; }
-    ` : ''}
+    `
+        : ""
+    }
 
     /* Mobile: center the panel */
     @media (max-width: 768px) {
@@ -243,7 +284,7 @@
   shadow.appendChild(style);
 
   // ─── HTML ─────────────────────────────────────────
-  let fabHTML = '';
+  let fabHTML = "";
   if (!config.customTrigger) {
     fabHTML = `
       <div class="orw-fab-container">
@@ -317,20 +358,21 @@
   document.body.appendChild(widget);
 
   // ─── Elements ─────────────────────────────────────
-  const panel      = shadow.getElementById('orw-panel');
-  const closeBtn   = shadow.querySelector('.orw-close');
-  const productsContainer = shadow.getElementById('orw-products-container');
-  const cartSummary = shadow.getElementById('orw-cart-summary');
-  const cartItems   = shadow.getElementById('orw-cart-items');
-  const cartTotal   = shadow.getElementById('orw-cart-total');
-  const sendBtn     = shadow.getElementById('orw-send-order');
-  const status      = shadow.getElementById('orw-status');
-  const orderNote   = shadow.getElementById('orw-note');
-  const tabBadge    = shadow.getElementById("orw-tab-badge");
+  const panel = shadow.getElementById("orw-panel");
+  const closeBtn = shadow.querySelector(".orw-close");
+  const productsContainer = shadow.getElementById("orw-products-container");
+  const cartSummary = shadow.getElementById("orw-cart-summary");
+  const cartItems = shadow.getElementById("orw-cart-items");
+  const cartTotal = shadow.getElementById("orw-cart-total");
+  const sendBtn = shadow.getElementById("orw-send-order");
+  const status = shadow.getElementById("orw-status");
+  const orderNote = shadow.getElementById("orw-note");
+  const tabBadge = shadow.getElementById("orw-tab-badge");
   let cart = [];
   let viewMode = config.defaultView;
 
-  const placeholderImage = 'https://placehold.co/400x300/eeeeee/666666?text=No+Image&font=roboto';
+  const placeholderImage =
+    "https://placehold.co/400x300/eeeeee/666666?text=No+Image&font=roboto";
 
   // ─── Custom Trigger + Default FAB Logic ───────────
   let fab = null;
@@ -349,13 +391,13 @@
 
   if (!config.customTrigger) {
     // Default FAB mode
-    fab = shadow.getElementById('orw-fab');
-    cartBadge = shadow.getElementById('orw-cart-badge');
+    fab = shadow.getElementById("orw-fab");
+    cartBadge = shadow.getElementById("orw-cart-badge");
 
     if (fab) {
       fab.onclick = () => {
-        panel.classList.toggle('open');
-        if (panel.classList.contains('open')) {
+        panel.classList.toggle("open");
+        if (panel.classList.contains("open")) {
           renderProducts();
           updateCartDisplay();
         }
@@ -367,13 +409,15 @@
     const triggerElements = document.querySelectorAll(triggerSelector);
 
     if (triggerElements.length === 0) {
-      console.warn(`Custom trigger selector "${triggerSelector}" did not match any elements`);
+      console.warn(
+        `Custom trigger selector "${triggerSelector}" did not match any elements`,
+      );
     }
 
-    triggerElements.forEach(el => {
-      el.addEventListener('click', (e) => {
+    triggerElements.forEach((el) => {
+      el.addEventListener("click", (e) => {
         e.preventDefault(); // prevent default action if link/button
-        panel.classList.add('open');
+        panel.classList.add("open");
         renderProducts();
         updateCartDisplay();
       });
@@ -382,28 +426,28 @@
 
   // ─── Render Products ──────────────────────────────
   function renderProducts() {
-    productsContainer.innerHTML = '';
-    productsContainer.className = viewMode === 'list' 
-      ? 'orw-products-list' 
-      : 'orw-products-grid';
+    productsContainer.innerHTML = "";
+    productsContainer.className =
+      viewMode === "list" ? "orw-products-list" : "orw-products-grid";
 
     function createProductElement(p) {
-      const inCart = cart.find(i => i.id === p.id);
+      const inCart = cart.find((i) => i.id === p.id);
       const qty = inCart ? inCart.quantity : 0;
 
-      const imgSrc = (p.image && p.image.trim()) ? p.image.trim() : placeholderImage;
+      const imgSrc =
+        p.image && p.image.trim() ? p.image.trim() : placeholderImage;
 
-      const desc = (p.description && p.description.trim())
-        ? `<div class="orw-product-desc">${p.description.trim()}</div>`
-        : '';
+      const desc =
+        p.description && p.description.trim()
+          ? `<div class="orw-product-desc">${p.description.trim()}</div>`
+          : "";
 
-      const badge = qty > 0
-        ? `<div class="orw-in-cart-badge">In cart: ${qty}</div>`
-        : '';
+      const badge =
+        qty > 0 ? `<div class="orw-in-cart-badge">In cart: ${qty}</div>` : "";
 
-      let html = '';
+      let html = "";
 
-      if (viewMode === 'list') {
+      if (viewMode === "list") {
         html = `
           <div style="display:flex; gap:12px; align-items:flex-start;">
             <img src="${imgSrc}" class="orw-product-image" alt="${p.name}">
@@ -425,42 +469,49 @@
               <div class="orw-product-name">${p.name}</div>
               <div class="orw-product-price">${formatCurrency(p.price)}</div>
               ${desc}
-              ${badge ? `<div style="margin-top:auto; text-align:center;">${badge}</div>` : ''}
+              ${badge ? `<div style="margin-top:auto; text-align:center;">${badge}</div>` : ""}
             </div>
           </div>
         `;
       }
 
-      const el = document.createElement('div');
-      el.className = viewMode === 'list' ? 'orw-product-item' : 'orw-product-card';
+      const el = document.createElement("div");
+      el.className =
+        viewMode === "list" ? "orw-product-item" : "orw-product-card";
       el.innerHTML = html;
-      el.addEventListener('click', () => addToCart(p));
+      el.addEventListener("click", () => addToCart(p));
       return el;
     }
 
-    const isGrouped = Array.isArray(config.products) && 
-      config.products.length > 0 && 
-      config.products[0] && 
-      'type' in config.products[0] && 
-      'items' in config.products[0];
+    const isGrouped =
+      Array.isArray(config.products) &&
+      config.products.length > 0 &&
+      config.products[0] &&
+      "type" in config.products[0] &&
+      "items" in config.products[0];
 
     if (isGrouped) {
-      config.products.forEach(category => {
-        if (!category?.type || !Array.isArray(category.items) || category.items.length === 0) return;
+      config.products.forEach((category) => {
+        if (
+          !category?.type ||
+          !Array.isArray(category.items) ||
+          category.items.length === 0
+        )
+          return;
 
         // Section heading
-        const heading = document.createElement('h2');
-        heading.className = 'orw-section-title';
+        const heading = document.createElement("h2");
+        heading.className = "orw-section-title";
         heading.textContent = category.type;
         productsContainer.appendChild(heading);
 
         // Products
-        category.items.forEach(product => {
+        category.items.forEach((product) => {
           productsContainer.appendChild(createProductElement(product));
         });
       });
     } else {
-      (config.products || []).forEach(product => {
+      (config.products || []).forEach((product) => {
         productsContainer.appendChild(createProductElement(product));
       });
     }
@@ -468,7 +519,7 @@
 
   // ─── Cart Logic ───────────────────────────────────
   function addToCart(product) {
-    let entry = cart.find(i => i.id === product.id);
+    let entry = cart.find((i) => i.id === product.id);
     if (entry) entry.quantity++;
     else cart.push({ ...product, quantity: 1 });
     updateCartDisplay();
@@ -476,7 +527,7 @@
   }
 
   function updateQuantity(id, delta) {
-    const item = cart.find(i => i.id === id);
+    const item = cart.find((i) => i.id === id);
     if (item) {
       item.quantity = Math.max(1, item.quantity + delta);
       updateCartDisplay();
@@ -487,18 +538,18 @@
   function updateCartBadge(count) {
     if (tabBadge) {
       if (count > 0) {
-        tabBadge.style.display = 'block';
+        tabBadge.style.display = "block";
       } else {
-        tabBadge.style.display = 'none';
+        tabBadge.style.display = "none";
       }
       tabBadge.textContent = count;
     } else {
-      console.log("Can't find the badge")
+      console.log("Can't find the badge");
     }
   }
 
   function removeItem(id) {
-    cart = cart.filter(i => i.id !== id);
+    cart = cart.filter((i) => i.id !== id);
     updateCartDisplay();
     renderProducts();
   }
@@ -509,27 +560,27 @@
     // Update badge (only if default FAB exists)
     if (cartBadge) {
       if (itemCount > 0) {
-        cartBadge.textContent = itemCount > 99 ? '99+' : itemCount;
-        cartBadge.style.display = 'flex';
+        cartBadge.textContent = itemCount > 99 ? "99+" : itemCount;
+        cartBadge.style.display = "flex";
       } else {
-        cartBadge.style.display = 'none';
+        cartBadge.style.display = "none";
       }
     }
     // Checkout badge
-    updateCartBadge(itemCount)
+    updateCartBadge(itemCount);
     if (cart.length === 0) {
-      cartSummary.style.display = 'none';
+      cartSummary.style.display = "none";
       return;
     }
 
-    cartSummary.style.display = 'block';
-    cartItems.innerHTML = '';
+    cartSummary.style.display = "block";
+    cartItems.innerHTML = "";
 
     let total = 0;
-    cart.forEach(item => {
+    cart.forEach((item) => {
       total += item.price * item.quantity;
-      const row = document.createElement('div');
-      row.className = 'orw-cart-item';
+      const row = document.createElement("div");
+      row.className = "orw-cart-item";
       row.innerHTML = `
         <div style="flex:1">
           <div style="font-weight:500">${item.name}</div>
@@ -548,200 +599,37 @@
     // cartTotal.textContent = `Total: ${config.currency}${total.toFixed(2)}`;
     cartTotal.textContent = `Total: ${formatCurrency(total)}`;
 
-    cartItems.querySelectorAll('.orw-qty-btn').forEach(btn => {
-      btn.onclick = () => updateQuantity(btn.dataset.id, Number(btn.dataset.delta));
+    cartItems.querySelectorAll(".orw-qty-btn").forEach((btn) => {
+      btn.onclick = () =>
+        updateQuantity(btn.dataset.id, Number(btn.dataset.delta));
     });
-    cartItems.querySelectorAll('.orw-remove-btn').forEach(btn => {
+    cartItems.querySelectorAll(".orw-remove-btn").forEach((btn) => {
       btn.onclick = () => removeItem(btn.dataset.id);
     });
   }
 
   function formatCurrency(price) {
-    return `${config.currency}${Number(price).toLocaleString('en-PH', {
+    return `${config.currency}${Number(price).toLocaleString("en-PH", {
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      maximumFractionDigits: 2,
     })}`;
   }
 
   // ─── Send Order ───────────────────────────────────
-  // async function sendOrder() {
-  //   // Get form inputs
-  //   const nameInput = shadow.querySelector('input[name="name"]');
-  //   const addressInput = shadow.querySelector('input[name="address"]');
-  //   const contactInput = shadow.querySelector('input[name="contact"]');
-  //   const notesInput = shadow.querySelector('textarea[name="notes"]');
-
-  //   // Reset previous errors
-  //   [nameInput, addressInput, contactInput].forEach(input => {
-  //     if (input) {
-  //       const field = input.closest('.orw-field');
-  //       if (field) {
-  //         field.classList.remove('invalid');
-  //         const err = field.querySelector('.error-message');
-  //         if (err) err.remove();
-  //       }
-  //     }
-  //   });
-
-  //   let isValid = true;
-  //   let firstInvalid = null;
-
-  //   // Helper to show error
-  //   function markInvalid(input, msg) {
-  //     if (!input) return;
-  //     const field = input.closest('.orw-field');
-  //     if (!field) return;
-
-  //     field.classList.add('invalid');
-
-  //     let err = field.querySelector('.error-message');
-  //     if (!err) {
-  //       err = document.createElement('div');
-  //       err.className = 'error-message';
-  //       field.appendChild(err);
-  //     }
-  //     err.textContent = msg;
-
-  //     isValid = false;
-  //     if (!firstInvalid) firstInvalid = input;
-  //   }
-
-  //   // Validation rules (all required fields)
-  //   if (!nameInput?.value.trim()) {
-  //     markInvalid(nameInput, "Name is required");
-  //   }
-
-  //   if (!addressInput?.value.trim()) {
-  //     markInvalid(addressInput, "Address is required");
-  //   }
-
-  //   if (!contactInput?.value.trim()) {
-  //     markInvalid(contactInput, "Contact is required");
-  //   } else {
-  //     const contactVal = contactInput.value.trim();
-  //     // Basic validation: email or phone (Philippine format or international)
-  //     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactVal) && 
-  //         !/^(09\d{9}|\+639\d{9}|0\d{1,2}\s?\d{7,})$/.test(contactVal)) {
-  //       markInvalid(contactInput, "Enter a valid email or Philippine phone number");
-  //     }
-  //   }
-
-  //   // If invalid → shake, focus first error, stop
-  //   if (!isValid) {
-  //     if (firstInvalid) {
-  //       firstInvalid.focus();
-  //       const field = firstInvalid.closest('.orw-field');
-  //       if (field) {
-  //         // Trigger shake
-  //         field.classList.add('invalid');
-  //         // Remove animation class after it ends (so it can re-trigger)
-  //         setTimeout(() => field.classList.remove('invalid'), 1000);
-  //       }
-  //     }
-  //     sendBtn.disabled = false;
-  //     sendBtn.textContent = 'Place Order';
-  //     return;
-  //   }
-
-  //   // Form is valid → submit
-  //   sendBtn.disabled = true;
-  //   sendBtn.textContent = 'Sending...';
-
-  //   if (config.submitMethod === 'whatsApp') {
-  //     sendOrderViaWhatApp(nameInput, addressInput, contactInput, notesInput)
-  //     return
-  //   }
-
-  //   // API server sending
-  //   if (!config.submitUrl) {
-  //     status.innerHTML = `❌ host url not found, Please provide a targer url for sending request`;
-  //     status.className = 'orw-status orw-error';
-  //     status.style.display = 'block';
-  //     return
-  //   }
-
-  //   const payload = {
-  //     host: window.location.hostname,
-  //     customer: {
-  //       name: nameInput.value.trim(),
-  //       address: addressInput.value.trim(),
-  //       contact: contactInput.value.trim(),
-  //       notes: notesInput?.value.trim() || undefined
-  //     },
-  //     items: cart.map(i => ({ 
-  //       id: i.id, 
-  //       name: i.name, 
-  //       price: i.price, 
-  //       quantity: i.quantity 
-  //     })),
-  //     total: cart.reduce((sum, i) => sum + i.price * i.quantity, 0),
-  //     timestamp: new Date().toISOString()
-  //   };
-
-  //   try {
-  //     const res = await fetch(config.submitUrl, {
-  //       method: 'POST',
-  //       headers: { 'Content-Type': 'application/json' },
-  //       body: JSON.stringify(payload)
-  //     });
-  //     let result;
-  //     try {
-  //       result = await res.json();
-  //     } catch (parseErr) {
-  //       throw new Error("Server returned invalid response");
-  //     }
-      
-  //     if (!result.success) {
-  //       throw new Error(result.message || result.error || "Order failed on server");
-  //     }
-
-  //     const successMsg = result.message || 
-  //       'Order placed successfully!<br>You will be notified through your provided contact details once the seller confirms your order.<br>Thank you!';
-
-  //     status.innerHTML = successMsg;
-  //     status.className = 'orw-status orw-success';
-  //     status.style.display = 'block';
-
-  //     setTimeout(() => {
-  //       cart = [];
-  //       updateCartDisplay();
-  //       status.style.display = 'none';
-  //       panel.classList.remove('open');
-  //       switchTab('products');
-  //     }, 5000);
-
-  //   } catch (err) {
-  //     console.error("Submission error:", err);
-
-  //     // Try to show API error message if available
-  //     let errorText = err.message || 'Failed to place order';
-  //     if (err.message.includes("API Response")) {
-  //       errorText = err.message;
-  //     }
-  //     status.innerHTML = `❌ ${errorText}<br>Please try again or contact us directly.`;
-  //     status.className = 'orw-status orw-error';
-  //     status.style.display = 'block';
-  //   } finally {
-  //     sendBtn.disabled = false;
-  //     sendBtn.textContent = 'Place Order';
-  //   }
-  // }
-
-  // ─── Send Order ───────────────────────────────────
   async function sendOrder() {
     // Get form inputs
-    const nameInput    = shadow.querySelector('input[name="name"]');
+    const nameInput = shadow.querySelector('input[name="name"]');
     const addressInput = shadow.querySelector('input[name="address"]');
     const contactInput = shadow.querySelector('input[name="contact"]');
-    const notesInput   = shadow.querySelector('textarea[name="notes"]');
+    const notesInput = shadow.querySelector('textarea[name="notes"]');
 
     // Reset previous errors
-    [nameInput, addressInput, contactInput].forEach(input => {
+    [nameInput, addressInput, contactInput].forEach((input) => {
       if (input) {
-        const field = input.closest('.orw-field');
+        const field = input.closest(".orw-field");
         if (field) {
-          field.classList.remove('invalid');
-          const err = field.querySelector('.error-message');
+          field.classList.remove("invalid");
+          const err = field.querySelector(".error-message");
           if (err) err.remove();
         }
       }
@@ -753,15 +641,15 @@
     // Helper to show error
     function markInvalid(input, msg) {
       if (!input) return;
-      const field = input.closest('.orw-field');
+      const field = input.closest(".orw-field");
       if (!field) return;
 
-      field.classList.add('invalid');
+      field.classList.add("invalid");
 
-      let err = field.querySelector('.error-message');
+      let err = field.querySelector(".error-message");
       if (!err) {
-        err = document.createElement('div');
-        err.className = 'error-message';
+        err = document.createElement("div");
+        err.className = "error-message";
         field.appendChild(err);
       }
       err.textContent = msg;
@@ -783,53 +671,60 @@
       markInvalid(contactInput, "Contact is required");
     } else {
       const contactVal = contactInput.value.trim();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactVal) && 
-          !/^(09\d{9}|\+639\d{9}|0\d{1,2}\s?\d{7,})$/.test(contactVal)) {
-        markInvalid(contactInput, "Enter a valid email or Philippine phone number");
+      if (
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactVal) &&
+        !/^(09\d{9}|\+639\d{9}|0\d{1,2}\s?\d{7,})$/.test(contactVal)
+      ) {
+        markInvalid(
+          contactInput,
+          "Enter a valid email or Philippine phone number",
+        );
       }
     }
 
     if (!isValid) {
       if (firstInvalid) {
         firstInvalid.focus();
-        const field = firstInvalid.closest('.orw-field');
+        const field = firstInvalid.closest(".orw-field");
         if (field) {
-          field.classList.add('shake'); // assuming you have .shake animation
-          setTimeout(() => field.classList.remove('shake'), 800);
+          field.classList.add("shake"); // assuming you have .shake animation
+          setTimeout(() => field.classList.remove("shake"), 800);
         }
       }
       sendBtn.disabled = false;
-      sendBtn.textContent = 'Place Order';
+      sendBtn.textContent = "Place Order";
       return;
     }
 
     // Form is valid → proceed
     sendBtn.disabled = true;
-    sendBtn.textContent = 'Sending...';
+    sendBtn.textContent = "Sending...";
 
     // Build order message (shared between WhatsApp and API)
     const customer = {
-      name:    nameInput.value.trim(),
+      name: nameInput.value.trim(),
       address: addressInput.value.trim(),
       contact: contactInput.value.trim(),
-      notes:   notesInput?.value.trim() || ''
+      notes: notesInput?.value.trim() || "",
     };
 
-    const itemsText = cart.map(i => 
-      `${i.quantity}× ${i.name} — ${formatCurrency(i.price * i.quantity)}`
-    ).join('\n');
+    const itemsText = cart
+      .map(
+        (i) =>
+          `${i.quantity}× ${i.name} — ${formatCurrency(i.price * i.quantity)}`,
+      )
+      .join("\n");
 
     const total = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
-
-    const orderText = 
+    const orderText =
       `${config.messagePrefix || `New order from ${window.location.hostname}:`}\n\n` +
       `Customer: ${customer.name}\n` +
       `Contact: ${customer.contact}\n` +
       `Address: ${customer.address}\n` +
-      (customer.notes ? `Notes: ${customer.notes}\n\n` : '\n') +
+      (customer.notes ? `Notes: ${customer.notes}\n\n` : "\n") +
       `Items:\n${itemsText}\n\n` +
       `TOTAL: ${formatCurrency(total)}\n` +
-      `Time: ${new Date().toLocaleString('en-PH')}`;
+      `Time: ${new Date().toLocaleString("en-PH")}`;
 
     const encodedMessage = encodeURIComponent(orderText);
 
@@ -837,62 +732,79 @@
     let usedMessaging = false;
 
     // ── Messaging methods (WhatsApp priority) ──
-    if (config.submitMethod === 'messenging' || config.submitMethod === 'both') {
+    if (
+      config.submitMethod === "messenging" ||
+      config.submitMethod === "both"
+    ) {
       if (config.whatsapp) {
         const waUrl = `https://wa.me/${config.whatsapp}?text=${encodedMessage}`;
-        window.open(waUrl, '_blank');
+        window.open(waUrl, "_blank");
         usedMessaging = true;
         success = true;
       }
       // Optional: Viber (prefill is unreliable — just open chat)
       else if (config.viber) {
         const viberUrl = `viber://chat?number=%2B${config.viber}`;
-        window.open(viberUrl, '_blank');
+        window.open(viberUrl, "_blank");
         usedMessaging = true;
         success = true;
       }
       // Optional: Messenger (supports ?text= for pages)
       else if (config.messenger) {
         const messengerUrl = `${config.messenger}?text=${encodedMessage}`;
-        window.open(messengerUrl, '_blank');
+        window.open(messengerUrl, "_blank");
         usedMessaging = true;
         success = true;
       }
     }
 
     // ── API fallback (or both) ──
-    if ((usedMessaging && config.submitMethod === 'both') || config.submitMethod === 'api') {
+    if (
+      (usedMessaging && config.submitMethod === "both") ||
+      config.submitMethod === "api"
+    ) {
       if (config.submitUrl) {
         const payload = {
           host: window.location.hostname,
           customer,
-          items: cart.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity })),
+          items: cart.map((i) => ({
+            id: i.id,
+            name: i.name,
+            price: i.price,
+            quantity: i.quantity,
+          })),
           total,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
 
         try {
           const res = await fetch(config.submitUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
           });
 
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
           const result = await res.json();
-          if (!result.success) throw new Error(result.message || 'Server error');
-
+          if (!result.success)
+            throw new Error(result.message || "Server error");
           success = true;
         } catch (err) {
-          console.error('API error:', err);
+          console.error("API error:", err);
           // If messaging already opened, don't overwrite success
           if (!usedMessaging) {
-            status.innerHTML = `❌ ${err.message || 'Failed to place order'}`;
-            status.className = 'orw-status orw-error';
-            status.style.display = 'block';
+            status.innerHTML = `❌ ${err.message || "Failed to place order"}`;
+            status.className = "orw-status orw-error";
+            status.style.display = "block";
           }
         }
+      } else {
+        status.innerHTML = `❌ host url not found, Please provide a targer url for sending request`;
+        status.className = "orw-status orw-error";
+        status.style.display = "block";
+        sendBtn.disabled = false;
+        sendBtn.textContent = "Place Order";
+        return;
       }
     }
 
@@ -901,51 +813,60 @@
       status.innerHTML = `
         Order sent successfully!<br>
         Thank you ${customer.name}!<br>
-        ${usedMessaging 
-          ? 'Please check your messaging app to confirm with the seller.' 
-          : 'We will get back to you soon.'}
+        ${
+          usedMessaging
+            ? "Please check your messaging app to confirm with the seller."
+            : "We will get back to you soon."
+        }
       `;
-      status.className = 'orw-status orw-success';
-      status.style.display = 'block';
+      status.className = "orw-status orw-success";
+      status.style.display = "block";
 
       setTimeout(() => {
         cart = [];
         updateCartDisplay();
-        status.style.display = 'none';
-        panel.classList.remove('open');
-        switchTab('products');
+        status.style.display = "none";
+        panel.classList.remove("open");
+        switchTab("products");
       }, 5000);
     } else {
-      status.innerHTML = 'No valid send method configured. Please contact us directly.';
-      status.className = 'orw-status orw-error';
-      status.style.display = 'block';
+      status.innerHTML =
+        "No valid send method configured. Please contact us directly.";
+      status.className = "orw-status orw-error";
+      status.style.display = "block";
     }
 
     sendBtn.disabled = false;
-    sendBtn.textContent = 'Place Order';
+    sendBtn.textContent = "Place Order";
   }
 
   // ─── Tab Switching ────────────────────────────────
   function switchTab(tabName) {
-    shadow.querySelectorAll('.orw-tab-btn').forEach(b => b.classList.remove('active'));
-    shadow.querySelectorAll('.orw-tab-content').forEach(c => c.classList.remove('active'));
+    shadow
+      .querySelectorAll(".orw-tab-btn")
+      .forEach((b) => b.classList.remove("active"));
+    shadow
+      .querySelectorAll(".orw-tab-content")
+      .forEach((c) => c.classList.remove("active"));
 
-    shadow.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-    shadow.getElementById(`orw-${tabName}-tab`).classList.add('active');
+    shadow.querySelector(`[data-tab="${tabName}"]`).classList.add("active");
+    shadow.getElementById(`orw-${tabName}-tab`).classList.add("active");
   }
 
   // ─── Events ───────────────────────────────────────
-  closeBtn.onclick = () => panel.classList.remove('open');
+  closeBtn.onclick = () => panel.classList.remove("open");
 
-  shadow.querySelectorAll('.orw-tab-btn').forEach(btn => {
+  shadow.querySelectorAll(".orw-tab-btn").forEach((btn) => {
     btn.onclick = () => switchTab(btn.dataset.tab);
   });
 
-  shadow.querySelectorAll('.orw-view-btn').forEach(btn => {
+  shadow.querySelectorAll(".orw-view-btn").forEach((btn) => {
     btn.onclick = () => {
       viewMode = btn.dataset.view;
-      shadow.querySelectorAll('.orw-view-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+      shadow
+        .querySelectorAll(".orw-view-btn")
+        .forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
       renderProducts();
     };
   });
@@ -956,5 +877,5 @@
   renderProducts();
   updateCartDisplay();
 
-  console.log('Widget loaded – custom trigger support added');
+  console.log("Widget loaded – custom trigger support added");
 })();
