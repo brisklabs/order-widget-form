@@ -21,7 +21,10 @@
     defaultView: script.dataset.view === 'card' ? 'grid' : 'list',
     orderNote: script.dataset.orderNote || null,  
     customTrigger: script.dataset.customTrigger || null,
-    submitMethod: script.dataset.submitMethod || 'api', 
+    submitMethod: script.dataset.submitMethod || 'api',  // messenging (whatapp, viber, messager)
+    whatsapp: script.dataset.whatsapp || null,
+    viber:script.dataset.viber || null,
+    messenger:script.dataset.messenger || null,
     products: []
   };
 
@@ -561,12 +564,176 @@
   }
 
   // ─── Send Order ───────────────────────────────────
+  // async function sendOrder() {
+  //   // Get form inputs
+  //   const nameInput = shadow.querySelector('input[name="name"]');
+  //   const addressInput = shadow.querySelector('input[name="address"]');
+  //   const contactInput = shadow.querySelector('input[name="contact"]');
+  //   const notesInput = shadow.querySelector('textarea[name="notes"]');
+
+  //   // Reset previous errors
+  //   [nameInput, addressInput, contactInput].forEach(input => {
+  //     if (input) {
+  //       const field = input.closest('.orw-field');
+  //       if (field) {
+  //         field.classList.remove('invalid');
+  //         const err = field.querySelector('.error-message');
+  //         if (err) err.remove();
+  //       }
+  //     }
+  //   });
+
+  //   let isValid = true;
+  //   let firstInvalid = null;
+
+  //   // Helper to show error
+  //   function markInvalid(input, msg) {
+  //     if (!input) return;
+  //     const field = input.closest('.orw-field');
+  //     if (!field) return;
+
+  //     field.classList.add('invalid');
+
+  //     let err = field.querySelector('.error-message');
+  //     if (!err) {
+  //       err = document.createElement('div');
+  //       err.className = 'error-message';
+  //       field.appendChild(err);
+  //     }
+  //     err.textContent = msg;
+
+  //     isValid = false;
+  //     if (!firstInvalid) firstInvalid = input;
+  //   }
+
+  //   // Validation rules (all required fields)
+  //   if (!nameInput?.value.trim()) {
+  //     markInvalid(nameInput, "Name is required");
+  //   }
+
+  //   if (!addressInput?.value.trim()) {
+  //     markInvalid(addressInput, "Address is required");
+  //   }
+
+  //   if (!contactInput?.value.trim()) {
+  //     markInvalid(contactInput, "Contact is required");
+  //   } else {
+  //     const contactVal = contactInput.value.trim();
+  //     // Basic validation: email or phone (Philippine format or international)
+  //     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactVal) && 
+  //         !/^(09\d{9}|\+639\d{9}|0\d{1,2}\s?\d{7,})$/.test(contactVal)) {
+  //       markInvalid(contactInput, "Enter a valid email or Philippine phone number");
+  //     }
+  //   }
+
+  //   // If invalid → shake, focus first error, stop
+  //   if (!isValid) {
+  //     if (firstInvalid) {
+  //       firstInvalid.focus();
+  //       const field = firstInvalid.closest('.orw-field');
+  //       if (field) {
+  //         // Trigger shake
+  //         field.classList.add('invalid');
+  //         // Remove animation class after it ends (so it can re-trigger)
+  //         setTimeout(() => field.classList.remove('invalid'), 1000);
+  //       }
+  //     }
+  //     sendBtn.disabled = false;
+  //     sendBtn.textContent = 'Place Order';
+  //     return;
+  //   }
+
+  //   // Form is valid → submit
+  //   sendBtn.disabled = true;
+  //   sendBtn.textContent = 'Sending...';
+
+  //   if (config.submitMethod === 'whatsApp') {
+  //     sendOrderViaWhatApp(nameInput, addressInput, contactInput, notesInput)
+  //     return
+  //   }
+
+  //   // API server sending
+  //   if (!config.submitUrl) {
+  //     status.innerHTML = `❌ host url not found, Please provide a targer url for sending request`;
+  //     status.className = 'orw-status orw-error';
+  //     status.style.display = 'block';
+  //     return
+  //   }
+
+  //   const payload = {
+  //     host: window.location.hostname,
+  //     customer: {
+  //       name: nameInput.value.trim(),
+  //       address: addressInput.value.trim(),
+  //       contact: contactInput.value.trim(),
+  //       notes: notesInput?.value.trim() || undefined
+  //     },
+  //     items: cart.map(i => ({ 
+  //       id: i.id, 
+  //       name: i.name, 
+  //       price: i.price, 
+  //       quantity: i.quantity 
+  //     })),
+  //     total: cart.reduce((sum, i) => sum + i.price * i.quantity, 0),
+  //     timestamp: new Date().toISOString()
+  //   };
+
+  //   try {
+  //     const res = await fetch(config.submitUrl, {
+  //       method: 'POST',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify(payload)
+  //     });
+  //     let result;
+  //     try {
+  //       result = await res.json();
+  //     } catch (parseErr) {
+  //       throw new Error("Server returned invalid response");
+  //     }
+      
+  //     if (!result.success) {
+  //       throw new Error(result.message || result.error || "Order failed on server");
+  //     }
+
+  //     const successMsg = result.message || 
+  //       'Order placed successfully!<br>You will be notified through your provided contact details once the seller confirms your order.<br>Thank you!';
+
+  //     status.innerHTML = successMsg;
+  //     status.className = 'orw-status orw-success';
+  //     status.style.display = 'block';
+
+  //     setTimeout(() => {
+  //       cart = [];
+  //       updateCartDisplay();
+  //       status.style.display = 'none';
+  //       panel.classList.remove('open');
+  //       switchTab('products');
+  //     }, 5000);
+
+  //   } catch (err) {
+  //     console.error("Submission error:", err);
+
+  //     // Try to show API error message if available
+  //     let errorText = err.message || 'Failed to place order';
+  //     if (err.message.includes("API Response")) {
+  //       errorText = err.message;
+  //     }
+  //     status.innerHTML = `❌ ${errorText}<br>Please try again or contact us directly.`;
+  //     status.className = 'orw-status orw-error';
+  //     status.style.display = 'block';
+  //   } finally {
+  //     sendBtn.disabled = false;
+  //     sendBtn.textContent = 'Place Order';
+  //   }
+  // }
+
+  // ─── Send Order ───────────────────────────────────
   async function sendOrder() {
     // Get form inputs
-    const nameInput = shadow.querySelector('input[name="name"]');
+    const nameInput    = shadow.querySelector('input[name="name"]');
     const addressInput = shadow.querySelector('input[name="address"]');
     const contactInput = shadow.querySelector('input[name="contact"]');
-    const notesInput = shadow.querySelector('textarea[name="notes"]');
+    const notesInput   = shadow.querySelector('textarea[name="notes"]');
 
     // Reset previous errors
     [nameInput, addressInput, contactInput].forEach(input => {
@@ -603,7 +770,7 @@
       if (!firstInvalid) firstInvalid = input;
     }
 
-    // Validation rules (all required fields)
+    // Validation rules
     if (!nameInput?.value.trim()) {
       markInvalid(nameInput, "Name is required");
     }
@@ -616,23 +783,19 @@
       markInvalid(contactInput, "Contact is required");
     } else {
       const contactVal = contactInput.value.trim();
-      // Basic validation: email or phone (Philippine format or international)
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactVal) && 
           !/^(09\d{9}|\+639\d{9}|0\d{1,2}\s?\d{7,})$/.test(contactVal)) {
         markInvalid(contactInput, "Enter a valid email or Philippine phone number");
       }
     }
 
-    // If invalid → shake, focus first error, stop
     if (!isValid) {
       if (firstInvalid) {
         firstInvalid.focus();
         const field = firstInvalid.closest('.orw-field');
         if (field) {
-          // Trigger shake
-          field.classList.add('invalid');
-          // Remove animation class after it ends (so it can re-trigger)
-          setTimeout(() => field.classList.remove('invalid'), 1000);
+          field.classList.add('shake'); // assuming you have .shake animation
+          setTimeout(() => field.classList.remove('shake'), 800);
         }
       }
       sendBtn.disabled = false;
@@ -640,62 +803,108 @@
       return;
     }
 
-    // Form is valid → submit
+    // Form is valid → proceed
     sendBtn.disabled = true;
     sendBtn.textContent = 'Sending...';
 
-    if (config.submitMethod === 'whatsApp') {
-      sendOrderViaWhatApp(nameInput, addressInput, contactInput, notesInput)
-      return
-    }
-
-    // API server sending
-    if (!config.submitUrl) {
-      status.innerHTML = `❌ host url not found, Please provide a targer url for sending request`;
-      status.className = 'orw-status orw-error';
-      status.style.display = 'block';
-      return
-    }
-
-    const payload = {
-      host: window.location.hostname,
-      customer: {
-        name: nameInput.value.trim(),
-        address: addressInput.value.trim(),
-        contact: contactInput.value.trim(),
-        notes: notesInput?.value.trim() || undefined
-      },
-      items: cart.map(i => ({ 
-        id: i.id, 
-        name: i.name, 
-        price: i.price, 
-        quantity: i.quantity 
-      })),
-      total: cart.reduce((sum, i) => sum + i.price * i.quantity, 0),
-      timestamp: new Date().toISOString()
+    // Build order message (shared between WhatsApp and API)
+    const customer = {
+      name:    nameInput.value.trim(),
+      address: addressInput.value.trim(),
+      contact: contactInput.value.trim(),
+      notes:   notesInput?.value.trim() || ''
     };
 
-    try {
-      const res = await fetch(config.submitUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      let result;
-      try {
-        result = await res.json();
-      } catch (parseErr) {
-        throw new Error("Server returned invalid response");
-      }
-      
-      if (!result.success) {
-        throw new Error(result.message || result.error || "Order failed on server");
-      }
+    const itemsText = cart.map(i => 
+      `${i.quantity}× ${i.name} — ${formatCurrency(i.price * i.quantity)}`
+    ).join('\n');
 
-      const successMsg = result.message || 
-        'Order placed successfully!<br>You will be notified through your provided contact details once the seller confirms your order.<br>Thank you!';
+    const total = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
-      status.innerHTML = successMsg;
+    const orderText = 
+      `${config.messagePrefix || `New order from ${window.location.hostname}:`}\n\n` +
+      `Customer: ${customer.name}\n` +
+      `Contact: ${customer.contact}\n` +
+      `Address: ${customer.address}\n` +
+      (customer.notes ? `Notes: ${customer.notes}\n\n` : '\n') +
+      `Items:\n${itemsText}\n\n` +
+      `TOTAL: ${formatCurrency(total)}\n` +
+      `Time: ${new Date().toLocaleString('en-PH')}`;
+
+    const encodedMessage = encodeURIComponent(orderText);
+
+    let success = false;
+    let usedMessaging = false;
+
+    // ── Messaging methods (WhatsApp priority) ──
+    if (config.submitMethod === 'messenging' || config.submitMethod === 'both') {
+      if (config.whatsapp) {
+        const waUrl = `https://wa.me/${config.whatsapp}?text=${encodedMessage}`;
+        window.open(waUrl, '_blank');
+        usedMessaging = true;
+        success = true;
+      }
+      // Optional: Viber (prefill is unreliable — just open chat)
+      else if (config.viber) {
+        const viberUrl = `viber://chat?number=%2B${config.viber}`;
+        window.open(viberUrl, '_blank');
+        usedMessaging = true;
+        success = true;
+      }
+      // Optional: Messenger (supports ?text= for pages)
+      else if (config.messenger) {
+        const messengerUrl = `${config.messenger}?text=${encodedMessage}`;
+        window.open(messengerUrl, '_blank');
+        usedMessaging = true;
+        success = true;
+      }
+    }
+
+    // ── API fallback (or both) ──
+    if ((usedMessaging && config.submitMethod === 'both') || config.submitMethod === 'api') {
+      if (config.submitUrl) {
+        const payload = {
+          host: window.location.hostname,
+          customer,
+          items: cart.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity })),
+          total,
+          timestamp: new Date().toISOString()
+        };
+
+        try {
+          const res = await fetch(config.submitUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+          const result = await res.json();
+          if (!result.success) throw new Error(result.message || 'Server error');
+
+          success = true;
+        } catch (err) {
+          console.error('API error:', err);
+          // If messaging already opened, don't overwrite success
+          if (!usedMessaging) {
+            status.innerHTML = `❌ ${err.message || 'Failed to place order'}`;
+            status.className = 'orw-status orw-error';
+            status.style.display = 'block';
+          }
+        }
+      }
+    }
+
+    // ── Final feedback ──
+    if (success) {
+      status.innerHTML = `
+        Order sent successfully!<br>
+        Thank you ${customer.name}!<br>
+        ${usedMessaging 
+          ? 'Please check your messaging app to confirm with the seller.' 
+          : 'We will get back to you soon.'}
+      `;
       status.className = 'orw-status orw-success';
       status.style.display = 'block';
 
@@ -706,116 +915,15 @@
         panel.classList.remove('open');
         switchTab('products');
       }, 5000);
-
-    } catch (err) {
-      console.error("Submission error:", err);
-
-      // Try to show API error message if available
-      let errorText = err.message || 'Failed to place order';
-      if (err.message.includes("API Response")) {
-        errorText = err.message;
-      }
-      status.innerHTML = `❌ ${errorText}<br>Please try again or contact us directly.`;
+    } else {
+      status.innerHTML = 'No valid send method configured. Please contact us directly.';
       status.className = 'orw-status orw-error';
       status.style.display = 'block';
-    } finally {
-      sendBtn.disabled = false;
-      sendBtn.textContent = 'Place Order';
     }
+
+    sendBtn.disabled = false;
+    sendBtn.textContent = 'Place Order';
   }
-
-
-  async function sendOrderViaWhatApp(nameInput, addressInput, contactInput, notesInput) {
-  const script = document.currentScript || document.querySelector('script[src*="order-widget-form"]');
-  const config = {
-    whatsapp: script?.dataset.whatsapp,
-    viber: script?.dataset.viber,
-    messenger: script?.dataset.messenger,
-    submitMethod: script?.dataset.submitMethod || 'api', // 'whatsapp', 'both', 'api'
-    messagePrefix: script?.dataset.whatsappMessagePrefix || `New order from ${window.location.hostname}:`,
-  };
-
-  // Build order text (same info as your current payload)
-  const customer = {
-    name: nameInput.value.trim(),
-    address: addressInput.value.trim(),
-    contact: contactInput.value.trim(),
-    notes: notesInput?.value.trim() || ''
-  };
-
-  const itemsText = cart.map(i => 
-    `${i.quantity}× ${i.name} — ${formatCurrency(i.price * i.quantity)}`
-  ).join('\n');
-
-  const total = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const orderText = 
-    `${config.messagePrefix}\n\n` +
-    `Customer: ${customer.name}\n` +
-    `Contact: ${customer.contact}\n` +
-    `Address: ${customer.address}\n` +
-    (customer.notes ? `Notes: ${customer.notes}\n\n` : '\n') +
-    `Items:\n${itemsText}\n\n` +
-    `TOTAL: ${formatCurrency(total)}\n` +
-    `Time: ${new Date().toLocaleString('en-PH')}`;
-
-  const encodedMessage = encodeURIComponent(orderText);
-
-  let opened = false;
-
-  // Priority: WhatsApp
-  if (config.whatsapp && (config.submitMethod === 'whatsapp' || config.submitMethod === 'both')) {
-    const waUrl = `https://wa.me/${config.whatsapp}?text=${encodedMessage}`;
-    window.open(waUrl, '_blank');
-    opened = true;
-  }
-
-  // Fallback/also: Viber (viber://chat?number=...)
-  if (!opened && config.viber && (config.submitMethod === 'whatsapp' || config.submitMethod === 'both')) {
-    const viberUrl = `viber://chat?number=%2B${config.viber}&draft=${encodedMessage}`;
-    window.open(viberUrl, '_blank');
-    opened = true;
-  }
-
-  // Fallback/also: Messenger (m.me link with prefill is limited, usually just opens chat)
-  if (!opened && config.messenger && (config.submitMethod === 'whatsapp' || config.submitMethod === 'both')) {
-    // Messenger doesn't support reliable prefill via URL params anymore
-    // Just open the chat page
-    window.open(config.messenger, '_blank');
-    opened = true;
-  }
-
-  // If no messaging option → fallback to original POST (or show error)
-  if (!opened && config.submitUrl && config.submitMethod !== 'whatsapp') {
-    // Your existing fetch code here...
-    // await fetch(config.submitUrl, { ... })
-  } else if (!opened) {
-    // No method configured
-    status.innerHTML = 'No messaging or backend configured. Please contact us directly.';
-    status.className = 'orw-status orw-error';
-    status.style.display = 'block';
-    return;
-  }
-
-  // Show success UI (same as your current success)
-  status.innerHTML = `
-    Order sent! Thank you ${customer.name}!<br>
-    ${config.whatsapp ? 'Check WhatsApp to confirm.' : 'We will get back to you soon.'}
-  `;
-  status.className = 'orw-status orw-success';
-  status.style.display = 'block';
-
-  // Reset cart after delay (keep your existing timeout logic)
-  setTimeout(() => {
-    cart = [];
-    updateCartDisplay();
-    status.style.display = 'none';
-    panel.classList.remove('open');
-    switchTab('products');
-  }, 5000);
-
-  sendBtn.disabled = false;
-  sendBtn.textContent = 'Place Order';
-}
 
   // ─── Tab Switching ────────────────────────────────
   function switchTab(tabName) {
