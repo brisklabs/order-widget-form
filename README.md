@@ -26,11 +26,11 @@ A lightweight, customizable, embeddable **ordering form widget** for websites �
 <script src="https://cdn.jsdelivr.net/gh/brisklabs/order-widget-form@latest/widget.js"
   async
   data-title="Place Your Order"
-  data-submit-url="https://order-widget-dyno-api.brisklabs-dev.deno.net/" <-- Your API endpoint required -->
+  data-submit-url="your-api-endpoint"
   data-button-color="#d97706"
   data-currency="₱"
   data-view="list"
-  data-order-note="Orders are processed within 24 hours. Delivery available in Iloilo City only."
+  data-order-note="Orders are processed within 24 hours."
   data-products='[
     { "id": "halo", "name": "Premium Halo-halo", "price": 109.45, "image": "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?w=400", "description": "Ube ice cream, leche flan, red beans, sago, macapuno, pinipig – classic Pinoy goodness"},
     { "id": "flan", "name": "Leche Flan", "price": 50.34, "image": "https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400", "description": "Silky caramel custard made with fresh eggs and condensed milk"},
@@ -49,7 +49,7 @@ A lightweight, customizable, embeddable **ordering form widget** for websites �
 <script src="https://cdn.jsdelivr.net/gh/brisklabs/order-widget-form@latest/widget.js"
   data-custom-trigger=".custom-order-btn"
   data-title="Place Your Order"
-  data-submit-url="https://order-widget-dyno-api.brisklabs-dev.deno.net/" 
+  data-submit-url="your-api-endpoint" 
   data-currency="₱"
   data-view="list"
   data-products='[...]'
@@ -63,7 +63,7 @@ A lightweight, customizable, embeddable **ordering form widget** for websites �
 | Attribute              | Description                                      | Default              | Example / Notes                              |
 |------------------------|--------------------------------------------------|----------------------|----------------------------------------------|
 | `data-title`           | Widget header                                    | "Quick Order"        | "Place Your Order"                           |
-| `data-submit-url`      | POST endpoint for order JSON                     | —                    | Required – your Deno backend                 |
+| `data-submit-url`      | POST endpoint for order JSON                     | —                    | Required – your API backend                 |
 | `data-currency`        | Currency symbol                                  | "₱"                  | "$", "€", "฿"                                |
 | `data-position`        | FAB & panel position                             | "bottom-right"       | "bottom-left"                                |
 | `data-button-color`    | FAB background color                             | "#2563eb"            | "#d97706" (amber)                            |
@@ -72,7 +72,7 @@ A lightweight, customizable, embeddable **ordering form widget** for websites �
 | `data-order-note`      | Optional note banner text                        | —                    | "Delivery fee added on top"                    |
 | `data-products`        | JSON array of products                           | —                    | See format below                             |
 
-### Product object format
+### Product object format plain
 
 ```json
 [
@@ -85,10 +85,46 @@ A lightweight, customizable, embeddable **ordering form widget** for websites �
   }
 ]
 ```
+### Product object format for group
+```json
+[
+  {
+    "type": "Breakfast",
+    "items": [
+      {
+        "id": "rice-egg",
+        "name": "Rice with Egg",
+        "price": 65.00,
+        "image": "https://norecipes.com/wp-content/uploads/2018/08/tosilog-recipe-004.jpg",
+        "description": "Steamed white rice served with perfectly cooked sunny-side-up egg – simple, hearty Filipino breakfast"
+      }
+    ]
+  },
+  {
+    "type": "Lunch",
+    "items": [
+      {
+        "id": "adobo",
+        "name": "Chicken Adobo",
+        "price": 145.00,
+        "image": "https://thumbs.dreamstime.com/b/close-up-bowl-rice-chicken-adobo-filipino-food-generative-ai-278459301.jpg",
+        "description": "Tender chicken cooked in soy sauce, vinegar, garlic, and spices – classic Filipino comfort food"
+      },
+      {
+        "id": "steamed-fish",
+        "name": "Steamed Fish",
+        "price": 135.00,
+        "image": "https://www.allrecipes.com/thmb/f_2MwcnL5O3h9BOvOUW2iVN19PI=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/140570-steamed-fish-with-ginger-JF-R309054_14177_4x3-3da7923d8ae3416594f15599301c8147.jpg",
+        "description": "Fresh fish steamed with ginger, onions, and soy sauce – light, healthy, and flavorful"
+      }
+    ]
+  }
+]
+```
 
 <br>
 
-## Backend Integration (Deno Deploy Example)
+## Backend Integration (Sample payload send to server)
 
 Your widget sends this JSON payload:
 
@@ -100,32 +136,6 @@ Your widget sends this JSON payload:
   "total": 235,
   "timestamp": "2025-02-14T04:47:00Z"
 }
-```
-
-<br>
-
-## Development
-
-### Local testing
-
-```bash
-# Serve your HTML test page
-npx serve .
-# or
-python -m http.server 8000
-```
-
-Open `index.html` in browser.
-
-### Run backend locally (Deno)
-
-```bash
-deno run --allow-net --allow-env main.ts
-```
-
-Test endpoint:
-```bash
-curl -X POST http://localhost:8000 -H "Content-Type: application/json" -d '{...}'
 ```
 
 <br>
