@@ -55,7 +55,6 @@
         config.products = [];
       });
   } else if (script.dataset.products) {
-    // Fallback: old inline data-products attribute
     try {
       config.products = JSON.parse(script.dataset.products || "[]");
       if (!Array.isArray(config.products)) config.products = [];
