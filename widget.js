@@ -144,7 +144,7 @@
       max-width: 90vw;
       max-height: 85vh;
       overflow-y: auto;
-      padding: 16px;
+      padding: 10px 16px;
       color: var(--text);
       display: none;
       transition: opacity 0.3s ease, transform 0.3s ease;
@@ -154,64 +154,67 @@
     }
 
     .orw-panel.open {
-      display: block;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;    
       opacity: 1;
       transform: translateY(0);
       bottom: 65px;
     }
+    .orw-content-scroll { flex: 1 1 auto; overflow-y: auto; margin-left: 10px; -webkit-overflow-scrolling: touch; }
+    .orw-content-scroll::-webkit-scrollbar { width: 6px; }
+    .orw-content-scroll::-webkit-scrollbar-thumb { background: transparent; border-radius: 3px; }
 
-/* Position overrides */
-${
-  config.position === "bottom-right"
-    ? `
-  .orw-fab-container { right: 24px; }
-  .orw-panel        { right: 24px; }
-`
-    : ""
-}
-${
-  config.position === "bottom-left"
-    ? `
-  .orw-fab-container { left: 24px; }
-  .orw-panel        { left: 24px; }
-`
-    : ""
-}
-${
-  config.position === "top-left"
-    ? `
-  .orw-fab-container { left: 24px; top: 24px; bottom: auto; }
-  .orw-panel        { left: 24px; top: 24px; }
-`
-    : ""
-}
-${
-  config.position === "top-right"
-    ? `
-  .orw-fab-container { right: 24px; top: 24px; bottom: auto; }
-  .orw-panel        { right: 24px; top: 24px; }
-`
-    : ""
-}
-${
-  config.position === "center"
-    ? `
-  .orw-fab-container {
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    bottom: auto;
-    right: auto;
-  }
-  .orw-panel {
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    /* Optional: add max-height or overflow handling if panel is large */
-  }
-`
-    : ""
-}
+    /* Position overrides */
+    ${
+      config.position === "bottom-right"
+        ? `
+      .orw-fab-container { right: 24px; }
+      .orw-panel        { right: 24px; }
+    `
+        : ""
+    }
+    ${
+      config.position === "bottom-left"
+        ? `
+      .orw-fab-container { left: 24px; }
+      .orw-panel        { left: 24px; }
+    `
+        : ""
+    }
+    ${
+      config.position === "top-left"
+        ? `
+      .orw-fab-container { left: 24px; top: 24px; bottom: auto; }
+      .orw-panel        { left: 24px; top: 24px; }
+    `
+        : ""
+    }
+    ${
+      config.position === "top-right"
+        ? `
+      .orw-fab-container { right: 24px; top: 24px; bottom: auto; }
+      .orw-panelv{ right: 24px; top: 24px; }
+    `: ""
+    }
+    ${
+      config.position === "center"
+        ? `
+      .orw-fab-container {
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        bottom: auto;
+        right: auto;
+      }
+      .orw-panel {
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+    `
+        : ""
+    }
 
     /* Mobile: center the panel */
     @media (max-width: 768px) {
@@ -223,7 +226,7 @@ ${
         transform: translate(-50%, -50%);
         bottom: auto !important;
         border-radius: 12px;
-        padding: 20px 16px;
+        padding: 20px 10px;
       }
       .orw-panel.open {
         transform: translate(-50%, -50%) scale(1);
@@ -248,10 +251,11 @@ ${
     @media (max-width: 600px) { .orw-note { padding: 14px; } }
 
     h2 { margin: 0 0 16px; font-size: 14px; text-align: center; font-weight: 600; }
+    .orw-header { flex-shrink: 0; padding: 5px 20px; background: white; position: relative; }
     .orw-close { position: absolute; top: 12px; right: 16px; font-size: 1.8em; cursor: pointer; color: #6b7280; }
     .orw-close:hover { color: #374151; }
 
-    .orw-tabs { display: flex; margin: 0 -16px 16px; border-bottom: 1px solid var(--border); }
+    .orw-tabs { display: flex; margin: 0 -16px 16px; border-bottom: 1px solid var(--border); gap: 8px;}
     .orw-tab-btn { display: flex; flex: 1; align-items: center; gap: 8px; padding: 10px 18px;  background: transparent;  border: none; font-weight: 600;  color: #64748b;  cursor: pointer;  font-size: 16px; justify-content: center;}
     .orw-tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
     .orw-tab-badge {  background: #ff9800; color: white;width: 24px;height: 24px; display: flex; align-content: center; border-radius: 50%; font-size: 12px; font-weight: bold; line-height: 1; margin-left: 6px; }
@@ -275,12 +279,10 @@ ${
       background: #f9fafb; cursor: pointer; transition: all 0.15s;
     }
     .orw-product-item:hover, .orw-product-card:hover { border-color: var(--primary); transform: translateY(-2px); }
-
     .orw-product-image { object-fit: cover; border-radius: 8px; }
 
     .orw-products-list .orw-product-image { width: 80px; height: 80px; }
     .orw-products-list .orw-section-title { margin: 36px 0 10px 0; font-size: 1.5rem; font-weight: 700; border-bottom: 2px solid #eee; padding-bottom: 8px;}
-
 
     .orw-products-grid .orw-product-image { width: 100%; height: 140px; }
     .orw-products-grid .orw-section-title { grid-column: 1 / -1; margin: 32px 0 16px 0; font-size: 1.7rem; font-weight: 700; color: #222; padding-left: 8px; border-bottom: 2px solid #eee; padding-bottom: 8px; }
@@ -337,17 +339,21 @@ ${
   shadow.innerHTML += `
     ${fabHTML}
     <div class="orw-panel" id="orw-panel">
+    <!-- Fixed / Sticky header -->
+    <div class="orw-header">
       <span class="orw-close">×</span>
       <h2>${config.title}</h2>
-
       <div class="orw-tabs">
         <button class="orw-tab-btn active" data-tab="products">Products</button>
         <button class="orw-tab-btn" data-tab="order">
-          Checkout 
-           <div id="orw-tab-badge" class="orw-tab-badge">0</div> 
+          Checkout
+          <div id="orw-tab-badge" class="orw-tab-badge">0</div>
         </button>
       </div>
-
+    </div>
+    
+    <!-- Scrollable content area -->
+    <div class="orw-content-scroll">
       <div id="orw-products-tab" class="orw-tab-content active">
         <div id="orw-products-container"></div>
       </div>
@@ -370,22 +376,18 @@ ${
 
         <div class="orw-cart-summary" id="orw-cart-summary" style="display:none;">
           <h3 style="text-align:center; margin:0 0 16px;">Your Order</h3>
-
           <div id="orw-note"></div>
-
           <div id="orw-cart-items"></div>
-
           <div id="orw-status" class="orw-status" style="display:none;"></div>
-            
           <div class="orw-total" id="orw-cart-total">Total: ${config.currency}0.00</div>
             <button class="orw-send-btn" id="orw-send-order">Place Order</button>
           </div>
         </div>
-
         <p class="orw-footer">
-            <span style="font-size:14px;">⚡</span> built by: 
-            <a href="https://www.brisklabs.dev" target="_blank" rel="noopener noreferrer">brisklabs.dev</a>
+          <span style="font-size:14px;">⚡</span> 
+          built by: <a href="https://www.brisklabs.dev" target="_blank" rel="noopener noreferrer">brisklabs.dev</a>
         </p>
+      </div>   
     </div>
   `;
 
