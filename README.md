@@ -64,7 +64,7 @@ A lightweight, customizable, embeddable **ordering form widget** for websites �
 | `data-title`           | Widget header                                    | "Quick Order"        | "Place Your Order"                           |
 | `data-submit-url`      | POST endpoint for order JSON                     | —                    | Required – your API backend                 |
 | `data-currency`        | Currency symbol                                  | "₱"                  | "$", "€", "฿"                                |
-| `data-position`        | FAB & panel position                             | "bottom-right"       | "bottom-left"                                |
+| `data-position`        | FAB & panel position                             | "bottom-right"       | "bottom-left, top-right top-left, center"                                |
 | `data-button-color`    | FAB background color                             | "#2563eb"            | "#d97706" (amber)                            |
 | `data-view`            | Default product view                             | "list"               | "list" or "card"                             |
 | `data-custom-trigger`  | CSS selector for custom open button(s)           | — (uses default FAB) | ".order-btn", "#my-btn"                      |

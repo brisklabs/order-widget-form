@@ -160,23 +160,58 @@
       bottom: 65px;
     }
 
-    /* Position overrides */
-    ${
-      config.position === "bottom-right"
-        ? `
-      .orw-fab-container { right: 24px; }
-      .orw-panel        { right: 24px; }
-    `
-        : ""
-    }
-    ${
-      config.position === "bottom-left"
-        ? `
-      .orw-fab-container { left: 24px; }
-      .orw-panel        { left: 24px; }
-    `
-        : ""
-    }
+/* Position overrides */
+${
+  config.position === "bottom-right"
+    ? `
+  .orw-fab-container { right: 24px; }
+  .orw-panel        { right: 24px; }
+`
+    : ""
+}
+${
+  config.position === "bottom-left"
+    ? `
+  .orw-fab-container { left: 24px; }
+  .orw-panel        { left: 24px; }
+`
+    : ""
+}
+${
+  config.position === "top-left"
+    ? `
+  .orw-fab-container { left: 24px; top: 24px; bottom: auto; }
+  .orw-panel        { left: 24px; top: 24px; }
+`
+    : ""
+}
+${
+  config.position === "top-right"
+    ? `
+  .orw-fab-container { right: 24px; top: 24px; bottom: auto; }
+  .orw-panel        { right: 24px; top: 24px; }
+`
+    : ""
+}
+${
+  config.position === "center"
+    ? `
+  .orw-fab-container {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    bottom: auto;
+    right: auto;
+  }
+  .orw-panel {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* Optional: add max-height or overflow handling if panel is large */
+  }
+`
+    : ""
+}
 
     /* Mobile: center the panel */
     @media (max-width: 768px) {
@@ -730,7 +765,7 @@
     let success = false;
     let usedMessaging = false;
 
-    // ── Messaging methods (WhatsApp priority) ──
+    // ── Messaging methods (WhatsApp Viber Messenger) ──
     if (
       config.submitMethod === "messenging" ||
       config.submitMethod === "both"
