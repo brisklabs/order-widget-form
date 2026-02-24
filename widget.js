@@ -3,9 +3,8 @@
   if (window.brisklabsOrderWidgetLoaded) return;
   window.brisklabsOrderWidgetLoaded = true;
 
-  const script =
-    document.currentScript ||
-    Array.from(document.scripts).find((s) => s.src.includes("widget.js"));
+  const script = document.currentScript || 
+    Array.from(document.scripts).find(s => s.src.includes("widget.js"));
 
   if (!script) {
     console.error("Widget script tag not found");
@@ -28,6 +27,7 @@
     messenger: script.dataset.messenger || null,
     productsUrl: script.dataset.productsUrl || null,
     products: [],
+    hasFilter: script.dataset.hasFilter || false,
   };
 
   // ─── Load Products ───────────────────────────────────────
@@ -70,9 +70,8 @@
 
   // ─── Widget + Shadow DOM ──────────────────────────
   const widget = document.createElement("div");
-  widget.id = "orw-brisklabs-order-widget";
+  widget.id = "orw-brisklabs-order-widget";  
   const shadow = widget.attachShadow({ mode: "open" });
-
   const style = document.createElement("style");
   style.textContent = `
     :host {
@@ -87,7 +86,6 @@
       --shadow: 0 8px 24px rgba(0,0,0,0.18);
       --font-base: 16px;
     }
-
     .orw-fab-container {
       position: fixed;
       z-index: 999998;
@@ -113,23 +111,26 @@
       box-shadow: var(--shadow);
       transition: transform 0.2s;
     }
-    .orw-fab:hover { transform: scale(1.08); }
+
+    .orw-fab:hover {
+      transform: scale(1.08);
+    }
 
     .orw-cart-badge {
-      position: absolute; 
-      top: -6px; 
+      position: absolute;
+      top: -6px;
       right: -6px;
-      background: #ef4444; 
+      background: #ef4444;
       color: white;
-      font-size: 11px; 
+      font-size: 11px;
       font-weight: bold;
-      width: 20px; 
+      width: 20px;
       height: 20px;
-      border-radius: 50%; 
-      display: flex; 
-      align-items: center; 
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
       justify-content: center;
-      padding: 4px; 
+      padding: 4px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.3);
       transform: scale(0.95);
     }
@@ -156,50 +157,44 @@
     .orw-panel.open {
       display: flex;
       flex-direction: column;
-      overflow: hidden;    
+      overflow: hidden;
       opacity: 1;
       transform: translateY(0);
       bottom: 65px;
     }
-    .orw-content-scroll { flex: 1 1 auto; overflow-y: auto; margin-left: 10px; -webkit-overflow-scrolling: touch; }
-    .orw-content-scroll::-webkit-scrollbar { width: 6px; }
-    .orw-content-scroll::-webkit-scrollbar-thumb { background: transparent; border-radius: 3px; }
 
-    /* Position overrides */
-    ${
-      config.position === "bottom-right"
-        ? `
+    .orw-content-scroll {
+      flex: 1 1 auto;
+      overflow-y: auto;
+      margin-left: 10px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .orw-content-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .orw-content-scroll::-webkit-scrollbar-thumb {
+      background: transparent;
+      border-radius: 3px;
+    }
+    ${config.position === "bottom-right" ? `
       .orw-fab-container { right: 24px; }
       .orw-panel        { right: 24px; }
-    `
-        : ""
-    }
-    ${
-      config.position === "bottom-left"
-        ? `
+    ` : ""}
+    ${config.position === "bottom-left" ? `
       .orw-fab-container { left: 24px; }
       .orw-panel        { left: 24px; }
-    `
-        : ""
-    }
-    ${
-      config.position === "top-left"
-        ? `
+    ` : ""}
+    ${config.position === "top-left" ? `
       .orw-fab-container { left: 24px; top: 24px; bottom: auto; }
       .orw-panel        { left: 24px; top: 24px; }
-    `
-        : ""
-    }
-    ${
-      config.position === "top-right"
-        ? `
+    ` : ""}
+    ${config.position === "top-right" ? `
       .orw-fab-container { right: 24px; top: 24px; bottom: auto; }
-      .orw-panelv{ right: 24px; top: 24px; }
-    `: ""
-    }
-    ${
-      config.position === "center"
-        ? `
+      .orw-panel         { right: 24px; top: 24px; }
+    ` : ""}
+    ${config.position === "center" ? `
       .orw-fab-container {
         top: 50%;
         left: 50%;
@@ -212,11 +207,8 @@
         left: 50%;
         transform: translate(-50%, -50%);
       }
-    `
-        : ""
-    }
+    ` : ""}
 
-    /* Mobile: center the panel */
     @media (max-width: 768px) {
       .orw-panel {
         width: 90vw;
@@ -237,68 +229,204 @@
       .orw-product-desc { font-size: 13px; }
       .orw-qty-btn, .orw-remove-btn { width: 36px; height: 36px; }
       .orw-send-btn { padding: 16px; font-size: 16px; }
+      .orw-footer { font-size: 11px; margin-top: 20px; padding-top: 12px; }
     }
 
-    .orw-footer { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); text-align: center; font-size: 12px; color: #64748b; line-height: 1.5;}
-    .orw-footer a { color: var(--primary); text-decoration: none; font-weight: 500; transition: color 0.2s ease;}
-    .orw-footer a:hover,
-    .orw-footer a:focus { color: var(--primary-dark); text-decoration: underline; }
-    @media (max-width: 768px) { .orw-footer { font-size: 11px; margin-top: 20px; padding-top: 12px; } }
+    .orw-header {
+      flex-shrink: 0;
+      padding: 0px 20px;
+      background: white;
+      position: relative;
+    }
 
-    .orw-note { background: #fff7e6; border-left: 5px solid #ff9800; padding: 16px 20px; border-radius: 10px; margin: 20px 0; font-size: 0.85rem; color: #333; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-    .orw-note strong { display: block; margin-bottom: 8px; font-size: 0.8rem; color: #ff9800; }
-    .orw-note p { margin: 4px 0;}
-    @media (max-width: 600px) { .orw-note { padding: 14px; } }
+    .orw-close {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      font-size: 1.8em;
+      cursor: pointer;
+      color: #6b7280;
+    }
 
-    h2 { margin: 0 0 16px; font-size: 14px; text-align: center; font-weight: 600; }
-    .orw-header { flex-shrink: 0; padding: 5px 20px; background: white; position: relative; }
-    .orw-close { position: absolute; top: 12px; right: 16px; font-size: 1.8em; cursor: pointer; color: #6b7280; }
-    .orw-close:hover { color: #374151; }
+    .orw-close:hover {
+      color: #374151;
+    }
 
-    .orw-tabs { display: flex; margin: 0 -16px 16px; border-bottom: 1px solid var(--border); gap: 8px;}
-    .orw-tab-btn { display: flex; flex: 1; align-items: center; gap: 8px; padding: 10px 18px;  background: transparent;  border: none; font-weight: 600;  color: #64748b;  cursor: pointer;  font-size: 16px; justify-content: center;}
-    .orw-tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
-    .orw-tab-badge {  background: #ff9800; color: white;width: 24px;height: 24px; display: flex; align-content: center; border-radius: 50%; font-size: 12px; font-weight: bold; line-height: 1; margin-left: 6px; }
+    .orw-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      gap: 8px;
+    }
 
+    .orw-tab-btn {
+      display: flex;
+      flex: 1;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      background: transparent;
+      border: none;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      font-size: 16px;
+      justify-content: center;
+    }
+
+    .orw-tab-btn.active {
+      color: var(--primary);
+      border-bottom: 3px solid var(--primary);
+    }
+
+    .orw-tab-badge {
+      background: #ff9800;
+      color: white;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: bold;
+      line-height: 1;
+      margin-left: 6px;
+    }
+    
     .orw-tab-content { display: none; }
     .orw-tab-content.active { display: block; }
-
     .orw-view-toggle { display: flex; gap: 8px; margin-bottom: 16px; justify-content: center; }
-    .orw-view-btn { padding: 6px 14px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; background: #f8fafc; font-size: 13px; }
-    .orw-view-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-    .orw-products-list { display: flex; flex-direction: column; gap: 16px; }
-    .orw-products-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .orw-view-btn {
+      padding: 6px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      background: #f8fafc;
+      font-size: 13px;
+    }
+
+    .orw-view-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    /* ==========================================================================
+      PRODUCTS LIST / GRID
+      ========================================================================== */
+    .orw-products-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .orw-products-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
 
     @media (max-width: 420px) {
-      .orw-products-grid { grid-template-columns: 1fr; }
+      .orw-products-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
-    .orw-product-item, .orw-product-card {
-      padding: 12px; border: 1px solid var(--border); border-radius: 12px;
-      background: #f9fafb; cursor: pointer; transition: all 0.15s;
+    .orw-product-item,
+    .orw-product-card {
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #f9fafb;
+      cursor: pointer;
+      transition: all 0.15s;
     }
-    .orw-product-item:hover, .orw-product-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+
+    .orw-product-item:hover,
+    .orw-product-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+
     .orw-product-image { object-fit: cover; border-radius: 8px; }
-
     .orw-products-list .orw-product-image { width: 80px; height: 80px; }
-    .orw-products-list .orw-section-title { margin: 36px 0 10px 0; font-size: 1.5rem; font-weight: 700; border-bottom: 2px solid #eee; padding-bottom: 8px;}
-
     .orw-products-grid .orw-product-image { width: 100%; height: 140px; }
-    .orw-products-grid .orw-section-title { grid-column: 1 / -1; margin: 32px 0 16px 0; font-size: 1.7rem; font-weight: 700; color: #222; padding-left: 8px; border-bottom: 2px solid #eee; padding-bottom: 8px; }
+
+    .orw-section-title {
+      margin: 32px 0 16px;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #111827;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 8px;
+    }
+
+    .orw-products-list .orw-section-title { margin: 36px 0 10px 0; font-size: 1.5rem; }
+    .orw-products-grid .orw-section-title { grid-column: 1 / -1; margin: 32px 0 16px 0; font-size: 1.7rem; padding-left: 8px; }
 
     .orw-product-name { font-weight: 600; font-size: 14px; margin: 0 0 4px; }
     .orw-product-price { color: #059669; font-weight: bold; font-size: 14px; }
     .orw-product-desc { margin-top: 6px; font-size: 12px; font-style: italic; color: #64748b; line-height: 1.45; }
     .orw-in-cart-badge { margin-top: 8px; display: inline-block; color: var(--primary); font-weight: 500; font-size: 12px; }
 
+    .orw-filter-bar {
+      margin-top: 20px;
+      padding: 12px 16px 16px;
+      background: #f9fafb;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .orw-filter-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .orw-filter-icon {
+      position: absolute;
+      left: 12px;
+      color: #6b7280;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+    }
+    .orw-category-select {
+      width: 100%;
+      padding: 10px 36px 10px 36px;
+      font-size: 15px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: white;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='6'><polygon points='0,0 12,0 6,6' fill='%236b7280'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 10px;
+      appearance: none;
+      cursor: pointer;
+    }
+
+    .orw-category-select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+    }
+
+    .orw-filter-bar:hover .orw-category-select {
+      border-color: #9ca3af;
+    }
+
+    /* ==========================================================================
+      CART, FORM & BUTTONS
+      ========================================================================== */
     .orw-customer-form .orw-field { position: relative; margin: 14px 0; }
     label { font-size: 13px; font-weight: 600; margin-bottom: 5px; display: block; }
     input, textarea { width: 100%; padding: 10px; font-size: 14px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; }
+
     .orw-field.invalid input,
     .orw-field.invalid textarea { border-color: #ef4444 !important; background-color: #fef2f2; animation: shake 0.5s ease-in-out; }
-    .orw-field .error-message { color: #ef4444; font-size: 12px; margin-top: 4px; display: none;}
+
+    .orw-field .error-message { color: #ef4444; font-size: 12px; margin-top: 4px; display: none; }
     .orw-field.invalid .error-message { display: block; }
+
     @keyframes shake {
       0%, 100% { transform: translateX(0); }
       10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
@@ -308,7 +436,6 @@
     .orw-cart-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f1f5f9; border-radius: 10px; margin-bottom: 10px; font-size: 13px; }
     .orw-qty-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--primary); color: white; font-size: 1.1em; cursor: pointer; touch-action: manipulation; }
     .orw-remove-btn { background: #ef4444; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; }
-
     .orw-total { font-size: 1.15em; font-weight: bold; text-align: right; margin: 16px 0; }
     .orw-send-btn { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 15px; }
     .orw-send-btn:disabled { background: #9ca3af; cursor: not-allowed; }
@@ -316,6 +443,38 @@
     .orw-status { text-align: center; padding: 20px 12px; border-radius: 12px; font-size: 15px; font-weight: bold; margin: 24px 0; }
     .orw-status.orw-success { background: #ecfdf5; color: var(--success); }
     .orw-status.orw-error   { background: #fef2f2; color: var(--danger); }
+
+    .orw-footer { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); text-align: center; font-size: 12px; color: #64748b; line-height: 1.5; }
+    .orw-footer a { color: var(--primary); text-decoration: none; font-weight: 500; transition: color 0.2s ease; }
+    .orw-footer a:hover, .orw-footer a:focus { color: var(--primary-dark); text-decoration: underline; }
+
+    .orw-note { background: #fff7e6; border-left: 5px solid #ff9800; padding: 16px 20px; border-radius: 10px; margin: 20px 0; font-size: 0.85rem; color: #333; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .orw-note strong { display: block; margin-bottom: 8px; font-size: 0.8rem; color: #ff9800; }
+    .orw-note p { margin: 4px 0; }
+    @media (max-width: 600px) { .orw-note { padding: 14px; } }
+
+    /* ==========================================================================
+      FILTERING & FADE ANIMATIONS
+      ========================================================================== */
+    .orw-section-title.hidden,
+    .orw-product-item.hidden,
+    .orw-product-card.hidden {
+      display: none !important;
+    }
+
+    .orw-section-title,
+    .orw-product-item,
+    .orw-product-card {
+      transition: opacity 0.3s ease;
+    }
+
+    .orw-section-title.hidden,
+    .orw-product-item.hidden,
+    .orw-product-card.hidden {
+      opacity: 0;
+      pointer-events: none;
+      visibility: hidden;
+    }
   `;
   shadow.appendChild(style);
 
@@ -347,7 +506,9 @@
         <button class="orw-tab-btn active" data-tab="products">Products</button>
         <button class="orw-tab-btn" data-tab="order">
           Checkout
-          <div id="orw-tab-badge" class="orw-tab-badge">0</div>
+          <div id="orw-tab-badge" class="orw-tab-badge">
+            <div>0</div>
+          </div>
         </button>
       </div>
     </div>
@@ -355,6 +516,7 @@
     <!-- Scrollable content area -->
     <div class="orw-content-scroll">
       <div id="orw-products-tab" class="orw-tab-content active">
+        <div id="orw-filter-placeholder"></div>
         <div id="orw-products-container"></div>
       </div>
 
@@ -404,6 +566,8 @@
   const status = shadow.getElementById("orw-status");
   const orderNote = shadow.getElementById("orw-note");
   const tabBadge = shadow.getElementById("orw-tab-badge");
+
+  let currentFilterValue = "all";
   let cart = [];
   let viewMode = config.defaultView;
 
@@ -439,6 +603,7 @@
         }
       };
     }
+  
   } else {
     // Custom trigger mode - hide default FAB
     const triggerSelector = config.customTrigger;
@@ -452,11 +617,129 @@
 
     triggerElements.forEach((el) => {
       el.addEventListener("click", (e) => {
-        e.preventDefault(); // prevent default action if link/button
+        e.preventDefault();
         panel.classList.add("open");
         renderProducts();
         updateCartDisplay();
       });
+    });
+  }
+
+
+  // ─── Category Filter Logic ────────────────────────────────
+  function getUniqueTypes() {
+    const types = config.products.map(group => group?.type?.trim()).filter(t => t && typeof t === 'string');
+    return [...new Set(types)].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+  }
+
+  function initCategoryFilter() {
+    if (shadow.getElementById("orw-filter-bar")) {
+      console.log("Filter already exists — skipping re-initialization");
+      applyFilter();
+      return;
+    }
+    if (!config.hasFilter) {
+      const placeholder = shadow.getElementById("orw-filter-placeholder");
+      if (placeholder) placeholder.remove();
+      return;
+    }
+    const uniqueTypes = getUniqueTypes();
+    if (uniqueTypes.length <= 1) {
+      const placeholder = shadow.getElementById("orw-filter-placeholder");
+      if (placeholder) placeholder.remove();
+      return;
+    }
+
+    const filterHTML = `
+      <div class="orw-filter-bar" id="orw-filter-bar">
+        <div class="orw-filter-wrapper">
+          <span class="orw-filter-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+            </svg>
+          </span>
+          <select id="orw-category-filter" class="orw-category-select">
+            <option value="all">All Categories</option>
+          </select>
+        </div>
+      </div>
+    `;
+
+    const target = shadow.getElementById("orw-filter-placeholder") || productsContainer;
+    if (!target) {
+      console.warn("Filter insertion target not found");
+      return;
+    }
+
+    target.insertAdjacentHTML("beforebegin", filterHTML);
+
+    // 6. Now safe to get the select element
+    const categoryFilter = shadow.getElementById("orw-category-filter");
+    if (!categoryFilter) {
+      console.error("Category filter select not found after injection");
+      return;
+    }
+
+    // 7. Populate options
+    uniqueTypes.forEach(type => {
+      const option = document.createElement("option");
+      option.value = type;
+      option.textContent = type;
+      categoryFilter.appendChild(option);
+    });
+
+    // 8. Restore previously selected value (if valid)
+    if (currentFilterValue && uniqueTypes.includes(currentFilterValue)) {
+      categoryFilter.value = currentFilterValue;
+    } else {
+      categoryFilter.value = "all"; // fallback
+      currentFilterValue = "all";
+    }
+
+    // 9. Attach change listener (only once)
+    categoryFilter.addEventListener("change", () => {
+      applyFilter(categoryFilter);
+    });
+
+    // 10. Apply filter right after population
+    applyFilter(categoryFilter);
+
+    // 11. Clean up placeholder
+    const placeholder = shadow.getElementById("orw-filter-placeholder");
+    if (placeholder) placeholder.remove();
+
+    console.log("Filter initialized successfully");
+  }
+
+  // ─── Apply Filter ────────────────────────────────
+  function applyFilter(filterElement = null) {
+    // Get the element safely — fallback to query if not passed
+    const catFilter = filterElement || shadow.getElementById("orw-category-filter");
+
+    if (!catFilter) {
+      console.warn("applyFilter: No category filter element available");
+      return;
+    }
+
+    currentFilterValue = catFilter.value;
+    const selected = currentFilterValue;
+
+    // Update section titles
+    shadow.querySelectorAll(".orw-section-title").forEach(title => {
+      if (selected === "all" || title.textContent.trim() === selected) {
+        title.classList.remove("hidden");
+      } else {
+        title.classList.add("hidden");
+      }
+    });
+
+    // Update product cards/items
+    shadow.querySelectorAll(".orw-product-item, .orw-product-card").forEach(item => {
+      if (selected === "all" || item.dataset.type === selected) {
+        item.classList.remove("hidden");
+      } else {
+        item.classList.add("hidden");
+      }
     });
   }
 
@@ -512,8 +795,7 @@
       }
 
       const el = document.createElement("div");
-      el.className =
-        viewMode === "list" ? "orw-product-item" : "orw-product-card";
+      el.className = viewMode === "list" ? "orw-product-item" : "orw-product-card";
       el.innerHTML = html;
       el.addEventListener("click", () => addToCart(p));
       return el;
@@ -543,9 +825,17 @@
 
         // Products
         category.items.forEach((product) => {
-          productsContainer.appendChild(createProductElement(product));
+          const card = createProductElement(product);
+          card.dataset.type = category.type;
+          productsContainer.appendChild(card);
         });
       });
+      
+      // Check and Apply Category filtering
+      if (config.hasFilter) {
+        initCategoryFilter()
+      }
+
     } else {
       (config.products || []).forEach((product) => {
         productsContainer.appendChild(createProductElement(product));
@@ -574,11 +864,11 @@
   function updateCartBadge(count) {
     if (tabBadge) {
       if (count > 0) {
-        tabBadge.style.display = "block";
+        tabBadge.style.display = "flex";
       } else {
         tabBadge.style.display = "none";
       }
-      tabBadge.textContent = count;
+      tabBadge.innerHTML = `<div>${count}</div>` ;
     } else {
       console.log("Can't find the badge");
     }
